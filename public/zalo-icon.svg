@@ -1,0 +1,8 @@
+<svg width="112" height="112" viewBox="0 0 112 112" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="112" height="112" rx="26" fill="#F8FAFC"/>
+  <path d="M18 22C18 12.0589 26.0589 4 36 4H73C83.4934 4 92 12.5066 92 23V74C92 93.33 76.33 109 57 109H18V22Z" fill="#0068FF"/>
+  <path d="M30 19C30 12.3726 35.3726 7 42 7H78C92.3594 7 104 18.6406 104 33V70C104 84.3594 92.3594 96 78 96H47.8L26 108V33C26 25.268 32.268 19 40 19H30Z" fill="white"/>
+  <path d="M26 86C32.5 92.5 39.8 96 49 96H47.8L26 108V86Z" fill="white"/>
+  <path d="M88 95C96.3 91.3 102 82.8 104 72V86C104 96.4934 95.4934 105 85 105H69C76 103.8 83.2 100.4 88 95Z" fill="#0068FF"/>
+  <text x="63" y="63" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" fill="#0068FF">Zalo</text>
+</svg>
