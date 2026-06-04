@@ -60,7 +60,13 @@ router.delete('/categories/:id', async (req, res, next) => {
 
 router.get('/products', async (req, res, next) => {
   try {
-    res.json(await prisma.product.findMany({ include: { category: true }, orderBy: { createdAt: 'desc' } }))
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50))
+    const [items, total] = await Promise.all([
+      prisma.product.findMany({ include: { category: true }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+      prisma.product.count()
+    ])
+    res.json({ items, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (error) {
     next(error)
   }
@@ -136,7 +142,13 @@ router.delete('/services/:id', async (req, res, next) => {
 
 router.get('/leads', async (req, res, next) => {
   try {
-    res.json(await prisma.lead.findMany({ include: { product: true }, orderBy: { createdAt: 'desc' } }))
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50))
+    const [items, total] = await Promise.all([
+      prisma.lead.findMany({ include: { product: true }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+      prisma.lead.count()
+    ])
+    res.json({ items, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (error) {
     next(error)
   }

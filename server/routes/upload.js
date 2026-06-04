@@ -13,7 +13,7 @@ fs.mkdirSync(uploadDir, { recursive: true })
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 100 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) return cb(new Error('Chỉ cho phép upload file ảnh.'))
     cb(null, true)

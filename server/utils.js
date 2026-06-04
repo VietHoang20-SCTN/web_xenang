@@ -16,4 +16,25 @@ function parseSpecs(value) {
   return String(value).split('\n').map((item) => item.trim()).filter(Boolean)
 }
 
-module.exports = { slugify, parseSpecs }
+function sanitize(input) {
+  if (typeof input === 'string') {
+    return input
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .trim()
+  }
+  if (Array.isArray(input)) return input.map(sanitize)
+  if (input !== null && typeof input === 'object') {
+    const result = {}
+    for (const [key, value] of Object.entries(input)) {
+      result[key] = sanitize(value)
+    }
+    return result
+  }
+  return input
+}
+
+module.exports = { slugify, parseSpecs, sanitize }
