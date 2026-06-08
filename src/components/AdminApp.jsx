@@ -18,7 +18,7 @@ export default function AdminApp() {
   const [products, setProducts] = useState([])
   const [services, setServices] = useState([])
   const [leads, setLeads] = useState([])
-  const [settings, setSettings] = useState({ brand: '', hotline: '', zalo: '', email: '', address: '', mapEmbed: '' })
+  const [settings, setSettings] = useState({ brand: '', hotline: '', zalo: '', email: '', address: '', mapEmbed: '', logo: '' })
 
   const loadAdmin = async () => {
     const [adminCategories, adminProductsData, adminServices, adminLeadsData, adminSettings] = await Promise.all([
@@ -51,16 +51,24 @@ export default function AdminApp() {
     <main className="admin-page">
       <aside className="admin-sidebar">
         <a className="brand" href="/"><Truck />Website</a>
-        <button className={tab === 'products' ? 'active' : ''} onClick={() => setTab('products')}>Sản phẩm</button>
-        <button className={tab === 'categories' ? 'active' : ''} onClick={() => setTab('categories')}>Danh mục</button>
-        <button className={tab === 'services' ? 'active' : ''} onClick={() => setTab('services')}>Dịch vụ</button>
-        <button className={tab === 'leads' ? 'active' : ''} onClick={() => setTab('leads')}>Lead</button>
-        <button className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>Cấu hình</button>
-        <button className="theme-toggle-sidebar" onClick={toggleTheme}>
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          {theme === 'dark' ? 'Sáng' : 'Tối'}
-        </button>
-        <button onClick={logout}><LogOut size={16} /> Đăng xuất</button>
+        <nav className="sidebar-nav">
+          <a className={tab === 'products' ? 'active' : ''} onClick={() => setTab('products')}><Truck size={18} /> Sản phẩm</a>
+          <hr />
+          <a className={tab === 'categories' ? 'active' : ''} onClick={() => setTab('categories')}><Plus size={18} /> Danh mục</a>
+          <hr />
+          <a className={tab === 'services' ? 'active' : ''} onClick={() => setTab('services')}><Settings size={18} /> Dịch vụ</a>
+          <hr />
+          <a className={tab === 'leads' ? 'active' : ''} onClick={() => setTab('leads')}><MessageCircle size={18} /> Lead</a>
+          <hr />
+          <a className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}><Settings size={18} /> Cấu hình</a>
+        </nav>
+        <div className="sidebar-footer">
+          <button className="theme-toggle-sidebar" onClick={toggleTheme}>
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === 'dark' ? 'Sáng' : 'Tối'}
+          </button>
+          <button className="logout-btn" onClick={logout}><LogOut size={16} /> Đăng xuất</button>
+        </div>
       </aside>
       <section className="admin-content">
         <div className="section-heading"><span>Admin CMS</span><h2>Quản trị website xe nâng</h2></div>

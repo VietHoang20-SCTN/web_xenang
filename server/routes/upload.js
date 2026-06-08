@@ -1,4 +1,4 @@
-﻿const fs = require('fs')
+const fs = require('fs')
 const path = require('path')
 const express = require('express')
 const multer = require('multer')
@@ -31,6 +31,24 @@ router.post('/product-image', requireAuth, upload.single('image'), async (req, r
       .rotate()
       .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 82 })
+      .toFile(outputPath)
+
+    res.status(201).json({ url: `/uploads/${filename}` })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/logo', requireAuth, upload.single('logo'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn file logo.' })
+    const filename = `site-logo-${Date.now()}.webp`
+    const outputPath = path.join(uploadDir, filename)
+
+    await sharp(req.file.buffer)
+      .rotate()
+      .resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 90 })
       .toFile(outputPath)
 
     res.status(201).json({ url: `/uploads/${filename}` })

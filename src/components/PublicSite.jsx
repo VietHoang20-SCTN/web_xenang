@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Building2, CheckCircle2, ClipboardList, Factory, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowRight, Building2, CheckCircle2, ClipboardList, Factory, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { categories as fallbackCategories, products as fallbackProducts, services as fallbackServices, siteSettings as fallbackSettings } from '../data'
 import { leadStatuses, mapEmbedUrl, serviceIcons } from '../constants'
@@ -15,6 +15,9 @@ export default function PublicSite() {
   const [siteSettings, setSiteSettings] = useState(fallbackSettings)
   const [activeCategory, setActiveCategory] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('home')
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', company: '', need: '', productId: '' })
   const [album, setAlbum] = useState(null)
   const [albumIndex, setAlbumIndex] = useState(0)
@@ -29,10 +32,36 @@ export default function PublicSite() {
     }).catch(() => {})
   }, [])
 
-  useScrollAnimations([products, categories, serviceItems, activeCategory])
-  useParallax()
+  // Track active section for nav highlighting
+  useEffect(() => {
+    const sections = document.querySelectorAll('section[id]')
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) setActiveSection(entry.target.id)
+      })
+    }, { threshold: 0.3, rootMargin: '-80px 0px -40% 0px' })
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
 
-  const filteredProducts = useMemo(() => activeCategory === 'all' ? products : products.filter((product) => product.category?.slug === activeCategory || product.category?.id === activeCategory || product.categoryId === activeCategory), [activeCategory, products])
+  useScrollAnimations([products, categories, serviceItems, activeCategory, searchQuery])
+  useParallax()
+  const productsSectionRef = useRef(null)
+
+  useEffect(() => {
+    if (searchQuery.trim() && productsSectionRef.current) {
+      productsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [searchQuery])
+
+  const filteredProducts = useMemo(() => {
+    let result = activeCategory === 'all' ? products : products.filter((product) => product.category?.slug === activeCategory || product.category?.id === activeCategory || product.categoryId === activeCategory)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      result = result.filter((product) => product.name?.toLowerCase().includes(q) || product.summary?.toLowerCase().includes(q) || product.tag?.toLowerCase().includes(q) || (product.specs || []).some((spec) => spec.toLowerCase().includes(q)))
+    }
+    return result
+  }, [activeCategory, products, searchQuery])
   const heroImages = useMemo(() => products.map((product) => product.image).filter(Boolean).slice(0, 10), [products])
 
   const openAlbum = (product, index = 0) => {
@@ -67,9 +96,13 @@ export default function PublicSite() {
     <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
 
     <header className="site-header">
-      <a className="brand" href="#home"><Zap size={28} /><span>{siteSettings.brand}</span></a>
-      <nav className="desktop-nav"><a href="#products">Sản phẩm</a><a href="#services">Dịch vụ</a><a href="#about">Giới thiệu</a><a href="#contact">Liên hệ</a></nav>
+      <a className="brand" href="#home">{(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark)) ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} /> : <Zap size={28} />}<span>{siteSettings.brand}</span></a>
+      <nav className="desktop-nav"><a href="#products" className={activeSection === 'products' ? 'active' : ''}>Sản phẩm</a><a href="#services" className={activeSection === 'services' ? 'active' : ''}>Dịch vụ</a><a href="#about" className={activeSection === 'about' ? 'active' : ''}>Giới thiệu</a><a href="#contact" className={activeSection === 'contact' ? 'active' : ''}>Liên hệ</a></nav>
       <div className="header-actions">
+        <div className={`header-search ${searchOpen ? 'open' : ''}`}>
+          <button className="search-toggle" onClick={() => setSearchOpen(!searchOpen)} aria-label="Tìm kiếm"><Search size={20} /></button>
+          {searchOpen && <input className="search-input" type="text" placeholder="Tìm sản phẩm..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} autoFocus />}
+        </div>
         <button className="theme-toggle" onClick={toggleTheme} aria-label="Chuyển đổi chế độ sáng/tối">
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
@@ -111,8 +144,8 @@ export default function PublicSite() {
       </section>
 
       {/* Products */}
-      <section id="products" className="section reveal-clip">
-        <div className="section-heading reveal-blur"><span>Sản phẩm</span><h2>Danh mục xe nâng trọng tâm</h2><p>Xem nhanh thông số kỹ thuật và gửi yêu cầu tư vấn thuê/mua.</p></div>
+      <section id="products" className="section reveal-clip" ref={productsSectionRef}>
+        <div className="section-heading reveal-blur"><span>Sản phẩm</span><h2>{searchQuery.trim() ? `Kết quả tìm kiếm "${searchQuery}"` : 'Danh mục xe nâng trọng tâm'}</h2><p>{searchQuery.trim() ? `Tìm thấy ${filteredProducts.length} sản phẩm` : 'Xem nhanh thông số kỹ thuật và gửi yêu cầu tư vấn thuê/mua.'}</p></div>
         <div className="category-tabs">
           <button className={activeCategory === 'all' ? 'active' : ''} onClick={() => setActiveCategory('all')}>Tất cả</button>
           {categories.map((category) => <button className={activeCategory === (category.slug || category.id) ? 'active' : ''} key={category.id || category.slug} onClick={() => setActiveCategory(category.slug || category.id)}>{category.name}</button>)}

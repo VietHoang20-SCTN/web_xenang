@@ -184,7 +184,7 @@ router.get('/site-settings', async (req, res, next) => {
 router.put('/site-settings', async (req, res, next) => {
   try {
     const current = await prisma.siteSetting.findFirst({ orderBy: { createdAt: 'asc' } })
-    const data = { brand: req.body.brand, hotline: req.body.hotline, zalo: req.body.zalo, email: req.body.email, address: req.body.address, mapEmbed: req.body.mapEmbed }
+    const data = { brand: req.body.brand, hotline: req.body.hotline, zalo: req.body.zalo, email: req.body.email, address: req.body.address, mapEmbed: req.body.mapEmbed, logo: req.body.logo, logoDark: req.body.logoDark }
     const settings = current ? await prisma.siteSetting.update({ where: { id: current.id }, data }) : await prisma.siteSetting.create({ data })
     res.json(settings)
   } catch (error) {

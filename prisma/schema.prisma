@@ -94,6 +94,8 @@ model SiteSetting {
   email     String?
   address   String?
   mapEmbed  String?
+  logo      String?
+  logoDark  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

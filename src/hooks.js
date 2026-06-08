@@ -56,14 +56,23 @@ export function useScrollProgress() {
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
+    let rafId = null
     const handleScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop
-      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
-      setProgress(scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0)
+      if (rafId) return
+      rafId = requestAnimationFrame(() => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop
+        const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
+        const newProgress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0
+        setProgress(newProgress)
+        rafId = null
+      })
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
   }, [])
 
   return progress
@@ -71,16 +80,26 @@ export function useScrollProgress() {
 
 export function useParallax() {
   useEffect(() => {
+    let rafId = null
     const handleScroll = () => {
-      const scrollY = window.scrollY
-      document.querySelectorAll('.parallax-slow').forEach(el => {
-        el.style.transform = `translateY(${scrollY * 0.05}px)`
-      })
-      document.querySelectorAll('.parallax-medium').forEach(el => {
-        el.style.transform = `translateY(${scrollY * 0.12}px)`
+      if (rafId) return
+      rafId = requestAnimationFrame(() => {
+        const scrollY = window.scrollY
+        const slowEls = document.querySelectorAll('.parallax-slow')
+        const medEls = document.querySelectorAll('.parallax-medium')
+        for (let i = 0; i < slowEls.length; i++) {
+          slowEls[i].style.transform = `translate3d(0, ${scrollY * 0.05}px, 0)`
+        }
+        for (let i = 0; i < medEls.length; i++) {
+          medEls[i].style.transform = `translate3d(0, ${scrollY * 0.12}px, 0)`
+        }
+        rafId = null
       })
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
   }, [])
 }
