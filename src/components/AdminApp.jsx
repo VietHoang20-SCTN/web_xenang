@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BarChart3, Building2, ImageUp, LogOut, Mail, MapPinned, MapPin, MessageCircle, Moon, Phone, Plus, Save, Settings, Sun, Truck } from 'lucide-react'
+import { ArrowRight, BarChart3, Building2, ImageUp, LogOut, Mail, MapPinned, MapPin, MessageCircle, Moon, Phone, Plus, Save, Settings, Sun, Truck } from 'lucide-react'
 import { api, clearToken, getToken, setToken, uploadProductImage } from '../api'
 import { emptyCategory, emptyProduct, emptyService, leadStatuses, serviceIcons } from '../constants'
 import { useTheme } from '../hooks'
@@ -37,13 +37,42 @@ export default function AdminApp() {
 
   if (!token) return (
     <main className="admin-login">
-      <form className="quote-form login-card" onSubmit={doLogin}>
-        <h1>Đăng nhập admin</h1>
-        <input placeholder="Email" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} />
-        <input type="password" placeholder="Mật khẩu" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} />
-        <button className="primary-btn">Đăng nhập</button>
-        <a href="/">Về website</a>
-      </form>
+      <div className="login-container">
+        <div className="login-brand-panel">
+          <div className="login-brand-content">
+            <div className="login-logo"><Truck size={32} /></div>
+            <h2>Hệ thống quản trị</h2>
+            <p>Quản lý sản phẩm, danh mục, dịch vụ và khách hàng tiềm năng cho website xe nâng.</p>
+            <div className="login-features">
+              <div className="login-feature"><BarChart3 size={18} /><span>Quản lý Lead & Pipeline</span></div>
+              <div className="login-feature"><Truck size={18} /><span>CRUD Sản phẩm & Danh mục</span></div>
+              <div className="login-feature"><Settings size={18} /><span>Cấu hình website linh hoạt</span></div>
+              <div className="login-feature"><ImageUp size={18} /><span>Upload & nén ảnh tự động</span></div>
+            </div>
+          </div>
+          <div className="login-brand-footer">
+            <small>© 2026 Xe Nâng Bắc Ninh</small>
+          </div>
+        </div>
+        <div className="login-form-panel">
+          <form className="login-form" onSubmit={doLogin}>
+            <div className="login-form-header">
+              <h1>Đăng nhập</h1>
+              <p>Nhập thông tin tài khoản admin để truy cập hệ thống.</p>
+            </div>
+            <div className="login-input-group">
+              <label className="login-label"><Mail size={18} /><span>Email</span></label>
+              <input type="email" required placeholder="admin@xenang.local" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} />
+            </div>
+            <div className="login-input-group">
+              <label className="login-label"><Settings size={18} /><span>Mật khẩu</span></label>
+              <input type="password" required placeholder="••••••••••" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} />
+            </div>
+            <button className="primary-btn login-submit" type="submit">Đăng nhập <ArrowRight size={18} /></button>
+            <a className="login-back-link" href="/">← Về trang chủ website</a>
+          </form>
+        </div>
+      </div>
     </main>
   )
 

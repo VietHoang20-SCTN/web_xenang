@@ -96,7 +96,7 @@ export default function PublicSite() {
     <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
 
     <header className="site-header">
-      <a className="brand" href="#home">{(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark)) ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} /> : <Zap size={28} />}<span>{siteSettings.brand}</span></a>
+      <a className="brand" href="#home">{(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark)) ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} /> : <Zap size={28} />}</a>
       <nav className="desktop-nav"><a href="#products" className={activeSection === 'products' ? 'active' : ''}>Sản phẩm</a><a href="#services" className={activeSection === 'services' ? 'active' : ''}>Dịch vụ</a><a href="#about" className={activeSection === 'about' ? 'active' : ''}>Giới thiệu</a><a href="#contact" className={activeSection === 'contact' ? 'active' : ''}>Liên hệ</a></nav>
       <div className="header-actions">
         <div className={`header-search ${searchOpen ? 'open' : ''}`}>

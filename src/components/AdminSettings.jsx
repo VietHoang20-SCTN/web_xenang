@@ -70,7 +70,7 @@ export default function AdminSettings({ settings, onRefresh }) {
     const ModeIcon = isDark ? Moon : Sun
 
     return (
-      <label className="setting-field logo-field">
+      <div className="setting-field logo-field">
         <span><ModeIcon size={18} /><strong>{label}</strong></span>
         <small>{hint}</small>
         <div className="logo-upload-area">
@@ -92,7 +92,7 @@ export default function AdminSettings({ settings, onRefresh }) {
           </button>}
           {isUploading && <span className="logo-uploading">Đang tải lên...</span>}
         </div>
-      </label>
+      </div>
     )
   }
 
