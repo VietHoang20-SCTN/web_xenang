@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
 
 :root {
   --accent: #FBBF24;
@@ -45,7 +45,7 @@
   --scrollbar-track: rgba(255, 255, 255, .04);
   --scrollbar-thumb: rgba(255, 255, 255, .12);
   color: var(--text-primary);
-  font-family: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
   background: var(--bg);
   transition: background .4s ease, color .4s ease;
 }
@@ -111,7 +111,7 @@ h3,
 .desktop-nav,
 .primary-btn,
 .secondary-btn {
-  font-family: Inter, 'Be Vietnam Pro', sans-serif;
+  font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ─── Animated Mesh Background ─── */
@@ -1638,7 +1638,7 @@ button:active,
 }
 
 .product-card .product-body h3 {
-  font-family: Inter, 'Be Vietnam Pro', sans-serif;
+  font-family: ui-sans-serif, system-ui, sans-serif;
   font-weight: 800;
   font-size: 1.1rem;
   color: var(--text-primary);
@@ -2448,7 +2448,7 @@ button:active,
 
 .map-fallback strong {
   color: var(--text-primary);
-  font-family: Inter, 'Be Vietnam Pro', sans-serif;
+  font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
 .map-card::after {
@@ -2461,7 +2461,7 @@ button:active,
   border-radius: 16px;
   background: rgba(15, 23, 42, .75);
   color: var(--text-primary);
-  font-family: Inter, 'Be Vietnam Pro', sans-serif;
+  font-family: ui-sans-serif, system-ui, sans-serif;
   font-weight: 900;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
   backdrop-filter: blur(16px);
@@ -3853,7 +3853,7 @@ footer {
   backdrop-filter: blur(32px);
   font-size: 1.4rem;
   font-weight: 900;
-  font-family: Inter, 'Be Vietnam Pro', sans-serif;
+  font-family: ui-sans-serif, system-ui, sans-serif;
   color: var(--text-primary);
 }
 
