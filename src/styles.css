@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
 
 :root {
   --accent: #FBBF24;
@@ -736,7 +736,7 @@ body::before {
   min-height: 42px;
   padding: 0;
   border-radius: 0;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   font-size: 1.02rem;
   background: none;
@@ -849,7 +849,7 @@ body::before {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border-color);
   color: var(--text-secondary);
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1rem;
   box-shadow: var(--glass-inset);
 }
@@ -872,7 +872,7 @@ body::before {
 .desktop-nav a.active {
   color: var(--accent);
   background: rgba(251, 191, 36, .12);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 [data-theme="light"] .desktop-nav a.active {
@@ -973,7 +973,7 @@ body::before {
   padding: 12px 20px;
   border-radius: var(--radius-pill);
   color: var(--text-primary);
-  font-weight: 900;
+  font-weight: 700;
   font-size: 1rem;
   background: rgba(251, 191, 36, .15);
   border: 1px solid rgba(251, 191, 36, .3);
@@ -1052,7 +1052,7 @@ body::before {
 
 .eyebrow {
   color: var(--accent);
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .09em;
   font-size: .78rem;
@@ -1078,7 +1078,7 @@ body::before {
   border: 0;
   border-radius: 16px;
   padding: 13px 20px;
-  font-weight: 900;
+  font-weight: 700;
   cursor: pointer;
   transition: all .25s cubic-bezier(.16, 1, .3, 1);
 }
@@ -1446,7 +1446,7 @@ button:active,
 
 .section-heading span {
   color: var(--accent);
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
 }
@@ -1485,7 +1485,7 @@ button:active,
   color: var(--text-secondary);
   padding: 12px 22px;
   border-radius: 14px;
-  font-weight: 800;
+  font-weight: 600;
   font-size: .92rem;
   letter-spacing: -.01em;
   transition: all .25s cubic-bezier(.16, 1, .3, 1);
@@ -1621,7 +1621,7 @@ button:active,
   border-radius: var(--radius-pill);
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: #0F172A;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 0.75rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -1639,7 +1639,7 @@ button:active,
 
 .product-card .product-body h3 {
   font-family: ui-sans-serif, system-ui, sans-serif;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.1rem;
   color: var(--text-primary);
   line-height: 1.3;
@@ -1737,7 +1737,7 @@ button:active,
   border-radius: 12px;
   background: linear-gradient(135deg, #F59E0B, var(--accent));
   color: #0F172A;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 0.85rem;
   letter-spacing: 0.01em;
   border: none;
@@ -2371,7 +2371,7 @@ button:active,
   border-radius: var(--radius-pill);
   background: rgba(251, 191, 36, .15);
   color: var(--accent);
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
   font-size: .78rem;
@@ -2462,7 +2462,7 @@ button:active,
   background: rgba(15, 23, 42, .75);
   color: var(--text-primary);
   font-family: ui-sans-serif, system-ui, sans-serif;
-  font-weight: 900;
+  font-weight: 700;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, .1);
@@ -2868,7 +2868,7 @@ button:active,
 
 .sidebar-nav a.active {
   color: var(--accent);
-  font-weight: 900;
+  font-weight: 700;
   background: rgba(251, 191, 36, .08);
 }
 
@@ -2942,7 +2942,7 @@ button:active,
   background: rgba(255, 255, 255, .06);
   padding: 12px 14px;
   cursor: pointer;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-secondary);
   transition: all .2s ease;
   backdrop-filter: blur(8px);
@@ -3051,7 +3051,7 @@ button:active,
 
 .lead-stat span {
   color: #64748B;
-  font-weight: 800;
+  font-weight: 600;
   font-size: .82rem;
 }
 
@@ -3119,7 +3119,7 @@ button:active,
   border-radius: var(--radius-pill);
   background: rgba(251, 191, 36, .2);
   color: #FBBF24;
-  font-weight: 900;
+  font-weight: 700;
   font-size: .82rem;
   border: 1px solid rgba(251, 191, 36, .3);
 }
@@ -3131,7 +3131,7 @@ button:active,
   border: 1px dashed rgba(148, 163, 184, .2);
   border-radius: 16px;
   color: #4B5563;
-  font-weight: 800;
+  font-weight: 600;
   background: rgba(255, 255, 255, .02);
 }
 
@@ -3176,7 +3176,7 @@ button:active,
   background: rgba(251, 191, 36, .15);
   color: #FBBF24;
   font-size: .72rem;
-  font-weight: 900;
+  font-weight: 700;
   border: 1px solid rgba(251, 191, 36, .25);
 }
 
@@ -3206,7 +3206,7 @@ button:active,
 .kanban-card time {
   color: #475569;
   font-size: .78rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 /* ─── Modals ─── */
@@ -3785,7 +3785,7 @@ button:active,
   border-radius: 14px;
   background: rgba(15, 23, 42, .7);
   color: var(--text-primary);
-  font-weight: 900;
+  font-weight: 700;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, .12);
   box-shadow: 0 8px 32px rgba(0, 0, 0, .3);
@@ -3852,7 +3852,7 @@ footer {
   background: rgba(15, 23, 42, .92);
   backdrop-filter: blur(32px);
   font-size: 1.4rem;
-  font-weight: 900;
+  font-weight: 700;
   font-family: ui-sans-serif, system-ui, sans-serif;
   color: var(--text-primary);
 }
@@ -4119,7 +4119,7 @@ footer {
   .floating-actions a.zalo-icon-btn span::after {
     content: 'Z';
     font-size: 1rem;
-    font-weight: 900;
+    font-weight: 700;
   }
 
   .admin-content {
