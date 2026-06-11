@@ -64,7 +64,7 @@ app.use('/api/upload', uploadRoutes)
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '..', 'dist')
   app.use(express.static(distPath))
-  app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')))
+  app.use((req, res) => res.sendFile(path.join(distPath, 'index.html')))
 } else {
   app.use((req, res) => res.status(404).json({ message: 'Không tìm thấy API.' }))
 }
