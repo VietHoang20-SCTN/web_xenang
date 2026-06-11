@@ -126,7 +126,7 @@ npm run prisma:seed
 
 | Field | Value |
 |---|---|
-| Build Command | `npm install && npm run prisma:generate && npm run build` |
+| Build Command | `npm install --include=dev && npm run prisma:generate && npm run build` |
 | Start Command | `node server/index.js` |
 | Instance Type | **Free** |
 
