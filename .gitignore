@@ -3,7 +3,8 @@ dist/
 .env
 .env.*
 !.env.example
-server/uploads/
+server/uploads/*
+!server/uploads/.gitkeep
 .DS_Store
 Thumbs.db
 *.log

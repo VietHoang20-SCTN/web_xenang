@@ -4,12 +4,17 @@ const express = require('express')
 const helmet = require('helmet')
 const compression = require('compression')
 const path = require('path')
+const fs = require('fs')
 const adminRoutes = require('./routes/admin')
 const authRoutes = require('./routes/auth')
 const publicRoutes = require('./routes/public')
 const uploadRoutes = require('./routes/upload')
 const prisma = require('./prisma')
 const { sanitize } = require('./utils')
+
+// Ensure uploads directory exists (Render ephemeral disk)
+const uploadsDir = path.join(__dirname, 'uploads')
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
 
 const app = express()
 const port = process.env.PORT || 4000
