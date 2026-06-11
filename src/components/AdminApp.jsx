@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowRight, BarChart3, Building2, ImageUp, LogOut, Mail, MapPinned, MapPin, MessageCircle, Moon, Phone, Plus, Save, Settings, Sun, Truck } from 'lucide-react'
-import { api, clearToken, getToken, setToken, uploadProductImage } from '../api'
-import { emptyCategory, emptyProduct, emptyService, leadStatuses, serviceIcons } from '../constants'
+import { ArrowRight, BarChart3, ImageUp, LogOut, Mail, MessageCircle, Moon, Plus, Settings, Sun, Truck } from 'lucide-react'
+import { api, clearToken, getToken, setToken } from '../api'
 import { useTheme } from '../hooks'
 import AdminProducts from './AdminProducts'
 import AdminCategories from './AdminCategories'
 import AdminServices from './AdminServices'
 import AdminLeads from './AdminLeads'
 import AdminSettings from './AdminSettings'
+import { notify } from '../toast'
 
 export default function AdminApp() {
   const { theme, toggleTheme } = useTheme()
@@ -30,10 +30,19 @@ export default function AdminApp() {
     setLeads(adminLeadsData?.items || adminLeadsData || [])
     setSettings(adminSettings || settings)
   }
-  useEffect(() => { if (token) loadAdmin().catch((error) => alert(error.message)) }, [token])
+  useEffect(() => { if (token) loadAdmin().catch((error) => notify.error(error.message)) }, [token])
 
-  const doLogin = async (event) => { event.preventDefault(); const result = await api('/auth/login', { method: 'POST', body: JSON.stringify(login) }); setToken(result.token); updateToken(result.token) }
-  const logout = () => { clearToken(); updateToken(null) }
+  const doLogin = async (event) => {
+    event.preventDefault()
+    try {
+      const result = await api('/auth/login', { method: 'POST', body: JSON.stringify(login) })
+      setToken(result.token); updateToken(result.token)
+      notify.success(`Chào mừng ${result.user?.name || ''}!`)
+    } catch (error) {
+      notify.error(error.message)
+    }
+  }
+  const logout = () => { clearToken(); updateToken(null); notify.success('Đã đăng xuất.') }
 
   if (!token) return (
     <main className="admin-login">

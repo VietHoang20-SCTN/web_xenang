@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Edit3, Plus, Save, Trash2 } from 'lucide-react'
 import { api } from '../api'
 import { emptyCategory } from '../constants'
+import { notify, confirmDialog } from '../toast'
 
 export default function AdminCategories({ categories, onRefresh }) {
   const [categoryForm, setCategoryForm] = useState(emptyCategory)
@@ -12,11 +13,25 @@ export default function AdminCategories({ categories, onRefresh }) {
   })
   const saveCategory = async (event) => {
     event.preventDefault()
-    if (categoryForm.id) await api(`/admin/categories/${categoryForm.id}`, { method: 'PUT', body: JSON.stringify(categoryForm) })
-    else await api('/admin/categories', { method: 'POST', body: JSON.stringify(categoryForm) })
-    setCategoryForm(emptyCategory); onRefresh()
+    try {
+      if (categoryForm.id) await api(`/admin/categories/${categoryForm.id}`, { method: 'PUT', body: JSON.stringify(categoryForm) })
+      else await api('/admin/categories', { method: 'POST', body: JSON.stringify(categoryForm) })
+      notify.success(categoryForm.id ? 'Đã cập nhật danh mục.' : 'Đã tạo danh mục mới.')
+      setCategoryForm(emptyCategory); onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
   }
-  const deleteCategory = async (id) => { if (confirm('Xóa danh mục này?')) { await api(`/admin/categories/${id}`, { method: 'DELETE' }); onRefresh() } }
+  const deleteCategory = async (id) => {
+    if (!(await confirmDialog('Xóa danh mục này?'))) return
+    try {
+      await api(`/admin/categories/${id}`, { method: 'DELETE' })
+      notify.success('Đã xóa danh mục.')
+      onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
+  }
 
   return (
     <div className="admin-crud">

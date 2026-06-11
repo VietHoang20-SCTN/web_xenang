@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Building2, Phone, Search, X } from 'lucide-react'
 import { api } from '../api'
 import { leadStatuses } from '../constants'
+import { notify, confirmDialog } from '../toast'
 
 export default function AdminLeads({ leads, onRefresh }) {
   const [leadSearch, setLeadSearch] = useState('')
@@ -13,8 +14,27 @@ export default function AdminLeads({ leads, onRefresh }) {
     return (leadStatus === 'ALL' || lead.status === leadStatus) && text.includes(leadSearch.toLowerCase())
   })
 
-  const updateLead = async (id, status, note) => { await api(`/admin/leads/${id}`, { method: 'PUT', body: JSON.stringify({ status, note }) }); onRefresh() }
-  const deleteLead = async (id) => { if (confirm('Xóa lead này?')) { await api(`/admin/leads/${id}`, { method: 'DELETE' }); setSelectedLead(null); onRefresh() } }
+  const updateLead = async (id, status, note) => {
+    try {
+      await api(`/admin/leads/${id}`, { method: 'PUT', body: JSON.stringify({ status, note }) })
+      notify.success('Đã cập nhật lead.')
+      setSelectedLead(null)
+      onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
+  }
+  const deleteLead = async (id) => {
+    if (!(await confirmDialog('Xóa lead này?'))) return
+    try {
+      await api(`/admin/leads/${id}`, { method: 'DELETE' })
+      notify.success('Đã xóa lead.')
+      setSelectedLead(null)
+      onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
+  }
 
   return (
     <div className="lead-admin">

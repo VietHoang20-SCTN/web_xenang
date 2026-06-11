@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Edit3, Plus, Save, Settings, Trash2 } from 'lucide-react'
+import { Edit3, Save, Settings, Trash2 } from 'lucide-react'
 import { api } from '../api'
 import { emptyService, serviceIcons } from '../constants'
+import { notify, confirmDialog } from '../toast'
 
 export default function AdminServices({ services, onRefresh }) {
   const [serviceForm, setServiceForm] = useState(emptyService)
@@ -13,11 +14,25 @@ export default function AdminServices({ services, onRefresh }) {
   })
   const saveService = async (event) => {
     event.preventDefault()
-    if (serviceForm.id) await api(`/admin/services/${serviceForm.id}`, { method: 'PUT', body: JSON.stringify(serviceForm) })
-    else await api('/admin/services', { method: 'POST', body: JSON.stringify(serviceForm) })
-    setServiceForm(emptyService); onRefresh()
+    try {
+      if (serviceForm.id) await api(`/admin/services/${serviceForm.id}`, { method: 'PUT', body: JSON.stringify(serviceForm) })
+      else await api('/admin/services', { method: 'POST', body: JSON.stringify(serviceForm) })
+      notify.success(serviceForm.id ? 'Đã cập nhật dịch vụ.' : 'Đã tạo dịch vụ mới.')
+      setServiceForm(emptyService); onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
   }
-  const deleteService = async (id) => { if (confirm('Xóa dịch vụ này?')) { await api(`/admin/services/${id}`, { method: 'DELETE' }); onRefresh() } }
+  const deleteService = async (id) => {
+    if (!(await confirmDialog('Xóa dịch vụ này?'))) return
+    try {
+      await api(`/admin/services/${id}`, { method: 'DELETE' })
+      notify.success('Đã xóa dịch vụ.')
+      onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
+  }
 
   return (
     <div className="admin-crud">

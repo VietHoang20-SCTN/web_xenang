@@ -2,6 +2,7 @@ const express = require('express')
 const prisma = require('../prisma')
 const { requireAuth } = require('../middleware/auth')
 const { parseSpecs, slugify } = require('../utils')
+const { validate, categorySchema, productSchema, serviceSchema, leadUpdateSchema, siteSettingsSchema } = require('../schemas')
 
 const router = express.Router()
 router.use(requireAuth)
@@ -28,21 +29,20 @@ router.get('/categories', async (req, res, next) => {
   }
 })
 
-router.post('/categories', async (req, res, next) => {
+router.post('/categories', validate(categorySchema), async (req, res, next) => {
   try {
     const { name, slug, description, sortOrder, isActive } = req.body
-    if (!name) return res.status(400).json({ message: 'Tên danh mục là bắt buộc.' })
-    const category = await prisma.category.create({ data: { name, slug: slug || slugify(name), description, sortOrder: Number(sortOrder || 0), isActive: isActive ?? true } })
+    const category = await prisma.category.create({ data: { name, slug: slug || slugify(name), description, sortOrder, isActive } })
     res.status(201).json(category)
   } catch (error) {
     next(error)
   }
 })
 
-router.put('/categories/:id', async (req, res, next) => {
+router.put('/categories/:id', validate(categorySchema), async (req, res, next) => {
   try {
     const { name, slug, description, sortOrder, isActive } = req.body
-    const category = await prisma.category.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), description, sortOrder: Number(sortOrder || 0), isActive: Boolean(isActive) } })
+    const category = await prisma.category.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), description, sortOrder, isActive } })
     res.json(category)
   } catch (error) {
     next(error)
@@ -72,21 +72,20 @@ router.get('/products', async (req, res, next) => {
   }
 })
 
-router.post('/products', async (req, res, next) => {
+router.post('/products', validate(productSchema), async (req, res, next) => {
   try {
     const { name, slug, categoryId, tag, image, gallery, summary, description, specs, isFeatured, isActive } = req.body
-    if (!name || !categoryId) return res.status(400).json({ message: 'Tên sản phẩm và danh mục là bắt buộc.' })
-    const product = await prisma.product.create({ data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery: Array.isArray(gallery) ? gallery : [], summary, description, specs: parseSpecs(specs), isFeatured: Boolean(isFeatured), isActive: isActive ?? true } })
+    const product = await prisma.product.create({ data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description, specs: parseSpecs(specs), isFeatured, isActive } })
     res.status(201).json(product)
   } catch (error) {
     next(error)
   }
 })
 
-router.put('/products/:id', async (req, res, next) => {
+router.put('/products/:id', validate(productSchema), async (req, res, next) => {
   try {
     const { name, slug, categoryId, tag, image, gallery, summary, description, specs, isFeatured, isActive } = req.body
-    const product = await prisma.product.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery: Array.isArray(gallery) ? gallery : [], summary, description, specs: parseSpecs(specs), isFeatured: Boolean(isFeatured), isActive: Boolean(isActive) } })
+    const product = await prisma.product.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description, specs: parseSpecs(specs), isFeatured, isActive } })
     res.json(product)
   } catch (error) {
     next(error)
@@ -110,21 +109,20 @@ router.get('/services', async (req, res, next) => {
   }
 })
 
-router.post('/services', async (req, res, next) => {
+router.post('/services', validate(serviceSchema), async (req, res, next) => {
   try {
     const { title, slug, description, icon, sortOrder, isActive } = req.body
-    if (!title) return res.status(400).json({ message: 'Tên dịch vụ là bắt buộc.' })
-    const service = await prisma.service.create({ data: { title, slug: slug || slugify(title), description, icon, sortOrder: Number(sortOrder || 0), isActive: isActive ?? true } })
+    const service = await prisma.service.create({ data: { title, slug: slug || slugify(title), description, icon, sortOrder, isActive } })
     res.status(201).json(service)
   } catch (error) {
     next(error)
   }
 })
 
-router.put('/services/:id', async (req, res, next) => {
+router.put('/services/:id', validate(serviceSchema), async (req, res, next) => {
   try {
     const { title, slug, description, icon, sortOrder, isActive } = req.body
-    const service = await prisma.service.update({ where: { id: req.params.id }, data: { title, slug: slug || slugify(title), description, icon, sortOrder: Number(sortOrder || 0), isActive: Boolean(isActive) } })
+    const service = await prisma.service.update({ where: { id: req.params.id }, data: { title, slug: slug || slugify(title), description, icon, sortOrder, isActive } })
     res.json(service)
   } catch (error) {
     next(error)
@@ -154,7 +152,7 @@ router.get('/leads', async (req, res, next) => {
   }
 })
 
-router.put('/leads/:id', async (req, res, next) => {
+router.put('/leads/:id', validate(leadUpdateSchema), async (req, res, next) => {
   try {
     const { status, note } = req.body
     const lead = await prisma.lead.update({ where: { id: req.params.id }, data: { status, note } })
@@ -181,10 +179,11 @@ router.get('/site-settings', async (req, res, next) => {
   }
 })
 
-router.put('/site-settings', async (req, res, next) => {
+router.put('/site-settings', validate(siteSettingsSchema), async (req, res, next) => {
   try {
     const current = await prisma.siteSetting.findFirst({ orderBy: { createdAt: 'asc' } })
-    const data = { brand: req.body.brand, hotline: req.body.hotline, zalo: req.body.zalo, email: req.body.email, address: req.body.address, mapEmbed: req.body.mapEmbed, logo: req.body.logo, logoDark: req.body.logoDark }
+    const { brand, hotline, zalo, email, address, mapEmbed, logo, logoDark, heroTitle, heroSubtitle } = req.body
+    const data = { brand, hotline, zalo, email, address, mapEmbed, logo, logoDark, heroTitle, heroSubtitle }
     const settings = current ? await prisma.siteSetting.update({ where: { id: current.id }, data }) : await prisma.siteSetting.create({ data })
     res.json(settings)
   } catch (error) {

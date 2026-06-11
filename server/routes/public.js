@@ -1,7 +1,19 @@
 const express = require('express')
+const rateLimit = require('express-rate-limit')
 const prisma = require('../prisma')
+const { validate, leadSchema } = require('../schemas')
 
 const router = express.Router()
+
+// Throttle lead submissions: a real user fills the form once or twice;
+// anything above 5 in 10 minutes from the same IP is almost certainly a bot.
+const leadLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { message: 'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 10 phút.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
 
 router.get('/site-settings', async (req, res, next) => {
   try {
@@ -51,10 +63,9 @@ router.get('/services', async (req, res, next) => {
   }
 })
 
-router.post('/leads', async (req, res, next) => {
+router.post('/leads', leadLimiter, validate(leadSchema), async (req, res, next) => {
   try {
     const { name, phone, company, need, productId } = req.body
-    if (!name || !phone || !need) return res.status(400).json({ message: 'Vui lòng nhập họ tên, số điện thoại và nhu cầu.' })
     const lead = await prisma.lead.create({ data: { name, phone, company: company || null, need, productId: productId || null } })
     res.status(201).json(lead)
   } catch (error) {
@@ -63,3 +74,4 @@ router.post('/leads', async (req, res, next) => {
 })
 
 module.exports = router
+

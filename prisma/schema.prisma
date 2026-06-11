@@ -87,15 +87,17 @@ model Lead {
 }
 
 model SiteSetting {
-  id        String   @id @default(cuid())
-  brand     String
-  hotline   String
-  zalo      String
-  email     String?
-  address   String?
-  mapEmbed  String?
-  logo      String?
-  logoDark  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  brand        String
+  hotline      String
+  zalo         String
+  email        String?
+  address      String?
+  mapEmbed     String?
+  logo         String?
+  logoDark     String?
+  heroTitle    String?
+  heroSubtitle String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

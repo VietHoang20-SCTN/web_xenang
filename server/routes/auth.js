@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const rateLimit = require('express-rate-limit')
 const prisma = require('../prisma')
 const { requireAuth } = require('../middleware/auth')
+const { validate, loginSchema } = require('../schemas')
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is required.')
@@ -18,10 +19,9 @@ const loginLimiter = rateLimit({
 
 const router = express.Router()
 
-router.post('/login', loginLimiter, async (req, res, next) => {
+router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body
-    if (!email || !password) return res.status(400).json({ message: 'Vui lòng nhập email và mật khẩu.' })
     const user = await prisma.adminUser.findUnique({ where: { email } })
     if (!user) return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng.' })
     const valid = await bcrypt.compare(password, user.passwordHash)

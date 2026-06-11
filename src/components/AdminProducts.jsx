@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { BarChart3, Edit3, ImageUp, Plus, Save, Trash2 } from 'lucide-react'
 import { api, assetUrl, uploadProductImage } from '../api'
 import { emptyProduct } from '../constants'
+import { notify, confirmDialog } from '../toast'
 
 export default function AdminProducts({ products, categories, onRefresh }) {
   const [productForm, setProductForm] = useState(emptyProduct)
@@ -13,8 +14,15 @@ export default function AdminProducts({ products, categories, onRefresh }) {
 
   const uploadImage = async (file) => {
     setUploading(true)
-    try { const result = await uploadProductImage(file); setProductForm({ ...productForm, image: result.url }) }
-    finally { setUploading(false) }
+    try {
+      const result = await uploadProductImage(file)
+      setProductForm({ ...productForm, image: result.url })
+      notify.success('Đã tải ảnh sản phẩm.')
+    } catch (error) {
+      notify.error(error.message)
+    } finally {
+      setUploading(false)
+    }
   }
 
   const uploadGalleryImages = async (files) => {
@@ -25,7 +33,12 @@ export default function AdminProducts({ products, categories, onRefresh }) {
       const uploadedImages = []
       for (const file of selectedFiles) { const result = await uploadProductImage(file); uploadedImages.push(result.url) }
       setProductForm({ ...productForm, gallery: [...(productForm.gallery || []), ...uploadedImages] })
-    } finally { setUploading(false) }
+      notify.success(`Đã tải ${uploadedImages.length} ảnh chi tiết.`)
+    } catch (error) {
+      notify.error(error.message)
+    } finally {
+      setUploading(false)
+    }
   }
 
   const editProduct = (product) => setProductForm({
@@ -37,12 +50,26 @@ export default function AdminProducts({ products, categories, onRefresh }) {
   const saveProduct = async (event) => {
     event.preventDefault()
     const payload = { ...productForm, specs: productForm.specs.filter(Boolean) }
-    if (productForm.id) await api(`/admin/products/${productForm.id}`, { method: 'PUT', body: JSON.stringify(payload) })
-    else await api('/admin/products', { method: 'POST', body: JSON.stringify(payload) })
-    setProductForm(emptyProduct); onRefresh()
+    try {
+      if (productForm.id) await api(`/admin/products/${productForm.id}`, { method: 'PUT', body: JSON.stringify(payload) })
+      else await api('/admin/products', { method: 'POST', body: JSON.stringify(payload) })
+      notify.success(productForm.id ? 'Đã cập nhật sản phẩm.' : 'Đã tạo sản phẩm mới.')
+      setProductForm(emptyProduct); onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
   }
 
-  const deleteProduct = async (id) => { if (confirm('Xóa sản phẩm này?')) { await api(`/admin/products/${id}`, { method: 'DELETE' }); onRefresh() } }
+  const deleteProduct = async (id) => {
+    if (!(await confirmDialog('Xóa sản phẩm này?'))) return
+    try {
+      await api(`/admin/products/${id}`, { method: 'DELETE' })
+      notify.success('Đã xóa sản phẩm.')
+      onRefresh()
+    } catch (error) {
+      notify.error(error.message)
+    }
+  }
 
   return (
     <div className="admin-crud">

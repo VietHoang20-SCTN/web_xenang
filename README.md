@@ -1,4 +1,4 @@
-﻿# Website xe nâng Bắc Ninh
+# Website xe nâng Bắc Ninh
 
 Ứng dụng web giới thiệu, bán và cho thuê xe nâng theo yêu cầu khách hàng trong `yeucaukhachhang.pdf`, có backend API, PostgreSQL và admin CMS.
 
@@ -104,9 +104,55 @@ src/data.js                  Dữ liệu fallback
 - `GET/PUT /api/admin/site-settings`
 - `POST /api/upload/product-image`
 
+## 🚀 Deploy Free (Neon + Render)
+
+### 1. Tạo PostgreSQL miễn phí trên Neon
+
+1. Vào [neon.tech](https://neon.tech) → Sign Up bằng GitHub
+2. Tạo project `xenang` → Copy **Connection string**
+3. Chạy migrate + seed với DB mới:
+
+```bash
+$env:DATABASE_URL="postgresql://...neon.tech/xenang?sslmode=require"
+npm run prisma:migrate
+npm run prisma:seed
+```
+
+### 2. Deploy lên Render
+
+1. Vào [render.com](https://render.com) → Sign Up bằng GitHub
+2. **New +** → **Web Service** → Connect repo `VietHoang20-SCTN/web_xenang`
+3. Cấu hình:
+
+| Field | Value |
+|---|---|
+| Build Command | `npm install && npm run prisma:generate && npm run build` |
+| Start Command | `node server/index.js` |
+| Instance Type | **Free** |
+
+4. Thêm **Environment Variables**:
+
+```
+NODE_ENV=production
+DATABASE_URL=postgresql://... (Neon connection string)
+JWT_SECRET=5e8fecfc8718327fbe024e9029c7ef7c249d2da31abbda88908c822981db4561
+CORS_ORIGINS=https://xenang.onrender.com
+PORT=4000
+VITE_API_URL=https://xenang.onrender.com/api
+ADMIN_EMAIL=admin@xenang.local
+ADMIN_PASSWORD=Admin@123456
+```
+
+5. Click **Create Web Service** → Đợi build ~5 phút
+
+### 3. Sau khi deploy
+
+- 🌐 Website: `https://xenang.onrender.com`
+- 🔧 Admin: `https://xenang.onrender.com/admin`
+- 💡 Dùng [UptimeRobot](https://uptimerobot.com) ping web mỗi 5 phút để tránh Render sleep
+
 ## Ghi chú production
 
-- Đổi `JWT_SECRET` trước khi deploy.
-- Đổi mật khẩu admin mặc định sau khi seed.
-- Ảnh sản phẩm upload từ admin được nén sang WebP, lưu tại `server/uploads` và phục vụ qua `/uploads/...`.
-- Nếu deploy tách frontend/backend, cập nhật `VITE_API_URL` đúng domain API.
+- Đổi `JWT_SECRET` và `ADMIN_PASSWORD` trước khi public chính thức.
+- Ảnh upload lưu tại `server/uploads/`, Render free disk sẽ reset khi redeploy → nên dùng Cloudinary hoặc S3 cho production thật.
+- Nếu dùng domain riêng, cập nhật `CORS_ORIGINS` và `VITE_API_URL` tương ứng.

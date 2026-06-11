@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, Building2, CheckCircle2, ClipboardList, Factory, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
+import { ArrowRight, Building2, CheckCircle2, ClipboardList, Factory, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { categories as fallbackCategories, products as fallbackProducts, services as fallbackServices, siteSettings as fallbackSettings } from '../data'
-import { leadStatuses, mapEmbedUrl, serviceIcons } from '../constants'
+import { mapEmbedUrl, serviceIcons } from '../constants'
 import { useTheme, useScrollAnimations, useScrollProgress, useParallax } from '../hooks'
 import AlbumModal from './AlbumModal'
+import { notify } from '../toast'
 
 export default function PublicSite() {
   const { theme, toggleTheme } = useTheme()
@@ -27,7 +28,7 @@ export default function PublicSite() {
     Promise.all([api('/public/categories'), api('/public/products'), api('/public/services'), api('/public/site-settings')]).then(([apiCategories, apiProducts, apiServices, apiSettings]) => {
       setCategories(apiCategories || fallbackCategories)
       setProducts(apiProducts || fallbackProducts)
-      setServiceItems(apiServices?.length ? apiServices : serviceItems)
+      setServiceItems((prev) => (apiServices?.length ? apiServices : prev))
       setSiteSettings(apiSettings || fallbackSettings)
     }).catch(() => {})
   }, [])
@@ -77,13 +78,18 @@ export default function PublicSite() {
   const submitLead = async (event) => {
     event.preventDefault()
     const phone = leadForm.phone.replace(/\s/g, '')
-    if (!leadForm.name.trim() || !leadForm.need.trim()) { alert('Vui lòng nhập họ tên và nhu cầu tư vấn.'); return }
-    if (!/^(0|\+84)(3|5|7|8|9)\d{8}$/.test(phone)) { alert('Vui lòng nhập số điện thoại Việt Nam hợp lệ, đủ 10 chữ số.'); return }
+    if (!leadForm.name.trim() || !leadForm.need.trim()) { notify.error('Vui lòng nhập họ tên và nhu cầu tư vấn.'); return }
+    if (!/^(0|\+84)(3|5|7|8|9)\d{8}$/.test(phone)) { notify.error('Vui lòng nhập số điện thoại Việt Nam hợp lệ, đủ 10 chữ số.'); return }
+    const loadingId = notify.loading('Đang gửi yêu cầu...')
     try {
       await api('/public/leads', { method: 'POST', body: JSON.stringify({ ...leadForm, phone }) })
-      alert('Cảm ơn bạn. Thông tin đã được ghi nhận, đội ngũ tư vấn sẽ liên hệ lại sớm.')
+      notify.dismiss(loadingId)
+      notify.success('Cảm ơn bạn! Thông tin đã được ghi nhận, đội ngũ tư vấn sẽ liên hệ lại sớm.')
       setLeadForm({ name: '', phone: '', company: '', need: '', productId: '' })
-    } catch (error) { alert(error.message) }
+    } catch (error) {
+      notify.dismiss(loadingId)
+      notify.error(error.message)
+    }
   }
 
   return <>
@@ -123,15 +129,15 @@ export default function PublicSite() {
       <section id="home" className="hero page-enter">
         <div className="hero-copy">
           <span className="eyebrow"><Zap size={16} /> Bán & cho thuê xe nâng tại miền Bắc</span>
-          <h1 className="parallax-slow">Giải pháp xe nâng điện và thiết bị kho cho doanh nghiệp logistics.</h1>
-          <p className="parallax-medium">Website B2B tối giản, rõ thông số, CTA nổi bật để khách hàng dễ gọi điện, gửi báo giá hoặc chat Zalo.</p>
+          <h1 className="parallax-slow">{siteSettings.heroTitle || 'Giải pháp xe nâng điện và thiết bị kho cho doanh nghiệp logistics.'}</h1>
+          <p className="parallax-medium">{siteSettings.heroSubtitle || 'Bán & cho thuê xe nâng, phụ tùng, sửa chữa tại Bắc Ninh. Hotline tư vấn 24h.'}</p>
           <div className="hero-actions">
             <a className="primary-btn quote-pulse" href="#quote">Nhận báo giá <ArrowRight size={18} /></a>
             <a className="zalo-icon-btn" href={siteSettings.zalo} aria-label="Chat Zalo"><span>Zalo</span></a>
           </div>
         </div>
         <div className="hero-card parallax-slow">
-          <div className="hero-carousel"><div className="hero-carousel-track">{[...heroImages, ...heroImages].map((image, index) => <img key={`${image}-${index}`} src={assetUrl(image)} alt="Hình ảnh sản phẩm xe nâng" />)}</div></div>
+          <div className="hero-carousel"><div className="hero-carousel-track">{[...heroImages, ...heroImages].map((image, index) => <img key={`${image}-${index}`} src={assetUrl(image)} alt="Hình ảnh sản phẩm xe nâng" loading={index < 2 ? 'eager' : 'lazy'} width={400} height={300} />)}</div></div>
           <div className="metric"><strong>{categories.length}+</strong><span>Nhóm sản phẩm chủ lực</span></div>
           <div className="metric"><strong>24h</strong><span>Tiếp nhận yêu cầu tư vấn</span></div>
           <div className="metric"><strong>Miền Bắc</strong><span>Tập trung Bắc Ninh và khu vực lân cận</span></div>
@@ -150,27 +156,70 @@ export default function PublicSite() {
           <button className={activeCategory === 'all' ? 'active' : ''} onClick={() => setActiveCategory('all')}>Tất cả</button>
           {categories.map((category) => <button className={activeCategory === (category.slug || category.id) ? 'active' : ''} key={category.id || category.slug} onClick={() => setActiveCategory(category.slug || category.id)}>{category.name}</button>)}
         </div>
-        <div className="product-grid">
-          {filteredProducts.map((product, index) => <article className={`product-card reveal-scale stagger-${index % 8 + 1}`} key={product.id}>
-            <button className="product-image-button" onClick={() => openAlbum(product, 0)}><img src={assetUrl(product.image)} alt={product.name} /><span>Xem album</span></button>
-            <div className="product-body">
-              <span className="tag">{product.tag}</span>
-              <h3>{product.name}</h3>
-              <p>{product.summary}</p>
-              <div className="product-gallery-slot">
-                {product.gallery?.length > 0
-                  ? <div className="product-thumbs">{product.gallery.slice(0, 4).map((image, index) => <button key={image} onClick={() => openAlbum(product, index + 1)}><img src={assetUrl(image)} alt={`${product.name} chi tiết`} /></button>)}</div>
-                  : <div className="no-gallery">Hiện tại không có ảnh chi tiết sản phẩm</div>}
-              </div>
-              <ul>{(product.specs || []).slice(0, 4).map((spec) => <li key={spec}><CheckCircle2 size={16} />{spec}</li>)}</ul>
-              {(product.specs || []).length > 4 && <button className="more-link" onClick={() => openProductDetail(product)}>Xem thêm {(product.specs || []).length - 4} thông số</button>}
-              <div className="card-actions">
-                <a href="#quote" onClick={() => setLeadForm({ ...leadForm, productId: product.id, need: `Tư vấn ${product.name}` })}>Nhận báo giá</a>
-                <a className="zalo-icon-btn small-zalo" href={siteSettings.zalo} aria-label="Chat Zalo"><span>Zalo</span></a>
-              </div>
-            </div>
-          </article>)}
-        </div>
+         <div className="product-grid">
+           {filteredProducts.map((product, index) => <article className={`product-card reveal-scale stagger-${index % 8 + 1}`} key={product.id}>
+             <div className="product-image-wrapper" onClick={() => openAlbum(product, 0)}>
+               <img src={assetUrl(product.image)} alt={product.name} loading="lazy" width={600} height={375} />
+               <span className="image-hint">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                 Xem ảnh
+               </span>
+               <div className="product-badge">
+                 <span className="tag">{product.tag}</span>
+               </div>
+             </div>
+
+             {/* Gallery Thumbnail Strip or No-Gallery Placeholder */}
+             {(product.gallery || []).length > 0 ? (
+               <div className="product-gallery-strip">
+                 {(product.gallery || []).map((img, i) => (
+                   <button
+                     key={img}
+                     className="product-gallery-thumb"
+                     onClick={(e) => { e.stopPropagation(); openAlbum(product, i); }}
+                     aria-label={`Xem ảnh ${i + 1} của ${product.name}`}
+                   >
+                     <img src={assetUrl(img)} alt={`${product.name} - ảnh ${i + 1}`} loading="lazy" />
+                   </button>
+                 ))}
+               </div>
+             ) : (
+               <div className="product-no-gallery">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                 Hiện sản phẩm không có ảnh hiển thị
+               </div>
+             )}
+
+             <div className="product-body">
+               <h3>{product.name}</h3>
+               <p className="product-desc">{product.summary}</p>
+
+               <div className="spec-chips">
+                 {(product.specs || []).slice(0, 4).map((spec) => (
+                   <span className="spec-chip" key={spec}>
+                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                     {spec}
+                   </span>
+                 ))}
+                 {(product.specs || []).length > 4 && (
+                   <button className="more-specs-link" onClick={() => openProductDetail(product)}>
+                     +{(product.specs || []).length - 4}
+                   </button>
+                 )}
+               </div>
+
+               <div className="product-actions">
+                 <button className="quote-btn" onClick={() => { setLeadForm({ ...leadForm, productId: product.id, need: `Tư vấn ${product.name}` }); document.getElementById('quote').scrollIntoView({ behavior: 'smooth' }); }}>
+                   <ArrowRight size={16} /> Nhận báo giá
+                 </button>
+                 <a className="zalo-btn" href={siteSettings.zalo} target="_blank" rel="noopener noreferrer">
+                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                   Chat Zalo
+                 </a>
+               </div>
+             </div>
+           </article>)}
+         </div>
         {filteredProducts.length === 0 && <div className="empty-state">Chưa có sản phẩm trong danh mục này.</div>}
       </section>
 
