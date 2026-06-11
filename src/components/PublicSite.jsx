@@ -274,7 +274,7 @@ export default function PublicSite() {
     {album && <AlbumModal album={album} albumIndex={albumIndex} setAlbumIndex={setAlbumIndex} selectedProduct={selectedProduct} onClose={() => { setAlbum(null); setSelectedProduct(null) }} siteSettings={siteSettings} onQuote={(productId, need) => { setLeadForm({ ...leadForm, productId, need }); setAlbum(null); setSelectedProduct(null) }} />}
 
     <div className="floating-actions">
-      <a href={`tel:${siteSettings.hotline}`}><Phone size={20} /> Gọi</a>
+      <a href={`tel:${siteSettings.hotline}`}><Phone size={20} /> <span className="floating-label">Gọi</span></a>
       <a className="zalo-icon-btn small-zalo" href={siteSettings.zalo} aria-label="Chat Zalo"><span>Zalo</span></a>
     </div>
     <footer>© 2026 {siteSettings.brand}. Website bán & cho thuê xe nâng cho doanh nghiệp kho vận.</footer>
