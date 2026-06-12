@@ -11,6 +11,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
     "lint": "eslint \"src/**/*.{js,jsx}\" \"server/**/*.js\"",
     "lint:fix": "eslint \"src/**/*.{js,jsx}\" \"server/**/*.js\" --fix",
