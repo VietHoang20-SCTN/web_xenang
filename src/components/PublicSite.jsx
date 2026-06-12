@@ -258,41 +258,41 @@ export default function PublicSite() {
 
       {/* Contact */}
       <section id="contact" className="section contact-section reveal-clip">
-        {/* Map — full width, large */}
-        <div className="map-card reveal-scale">
-          {mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)
-            ? <iframe title="Bản đồ" src={mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)} loading="lazy"></iframe>
-            : <div className="map-fallback"><MapPinned size={34} /><strong>Không thể nhúng trực tiếp link Google Maps này</strong><span>Link rút gọn từ admin vẫn được dùng để mở bản đồ bên ngoài.</span></div>}
-        </div>
-
-        {/* Heading */}
-        <div className="section-heading reveal-blur">
-          <span>Liên hệ</span>
-          <h2>Hãy liên hệ với chúng tôi</h2>
-          <p>Đội ngũ chuyên gia sẵn sàng tư vấn giải pháp xe nâng & thiết bị kho phù hợp nhất cho doanh nghiệp bạn.</p>
-        </div>
-
-        {/* Contact Cards */}
-        <div className="contact-cards">
-          <div className="contact-card reveal-scale stagger-1">
-            <div className="contact-card-icon"><MapPin size={22} /></div>
-            <div className="contact-card-body">
-              <h4>Địa chỉ</h4>
-              <p>{siteSettings.address || 'Đang cập nhật'}</p>
-            </div>
+        <div className="contact-grid">
+          {/* Map */}
+          <div className="map-card reveal-left">
+            {mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)
+              ? <iframe title="Bản đồ" src={mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)} loading="lazy"></iframe>
+              : <div className="map-fallback"><MapPinned size={34} /><strong>Không thể nhúng trực tiếp link Google Maps này</strong><span>Link rút gọn từ admin vẫn được dùng để mở bản đồ bên ngoài.</span></div>}
           </div>
-          <div className="contact-card reveal-scale stagger-2">
-            <div className="contact-card-icon"><Phone size={22} /></div>
-            <div className="contact-card-body">
-              <h4>Hotline</h4>
-              <a href={`tel:${siteSettings.hotline}`}>{siteSettings.hotline || '0900 000 000'}</a>
-            </div>
-          </div>
-          <div className="contact-card reveal-scale stagger-3">
-            <div className="contact-card-icon"><Mail size={22} /></div>
-            <div className="contact-card-body">
-              <h4>Email</h4>
-              <a href={`mailto:${siteSettings.email}`}>{siteSettings.email || 'contact@xenang.vn'}</a>
+
+          {/* Info */}
+          <div className="contact-panel reveal-right">
+            <span className="contact-eyebrow">Liên hệ</span>
+            <h2>{siteSettings.brand}</h2>
+
+            <div className="contact-items">
+              <div className="contact-item">
+                <div className="contact-item-icon"><MapPin size={20} /></div>
+                <div>
+                  <span className="contact-item-label">Địa chỉ</span>
+                  <p>{siteSettings.address || 'Đang cập nhật'}</p>
+                </div>
+              </div>
+              <div className="contact-item">
+                <div className="contact-item-icon"><Phone size={20} /></div>
+                <div>
+                  <span className="contact-item-label">Hotline</span>
+                  <a href={`tel:${siteSettings.hotline}`}>{siteSettings.hotline || '0900 000 000'}</a>
+                </div>
+              </div>
+              <div className="contact-item">
+                <div className="contact-item-icon"><Mail size={20} /></div>
+                <div>
+                  <span className="contact-item-label">Email</span>
+                  <a href={`mailto:${siteSettings.email}`}>{siteSettings.email || 'contact@xenang.vn'}</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
