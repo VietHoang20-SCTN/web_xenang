@@ -749,9 +749,7 @@ body::before {
   color: var(--accent);
 }
 
-.brand-logo {
-  width: 100px;
-  height: 100px;
+.brand-logo { width: auto; height: 36px;
   object-fit: contain;
   border-radius: 8px;
 }

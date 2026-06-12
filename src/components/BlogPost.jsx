@@ -9,6 +9,7 @@ export default function BlogPost() {
   const { theme, toggleTheme } = useTheme()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [siteSettings, setSiteSettings] = useState({ brand: 'Xe Nâng Bắc Ninh' })
 
   useEffect(() => {
     (async () => {
@@ -22,6 +23,7 @@ export default function BlogPost() {
         setLoading(false)
       }
     })()
+    api('/public/site-settings').then(s => setSiteSettings(s || {})).catch(() => {})
   }, [slug])
 
   const formatDate = (d) => new Date(d).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -54,7 +56,12 @@ export default function BlogPost() {
 
       {/* ── Header ── */}
       <header className="site-header blog-site-header">
-        <Link className="brand" to="/"><Zap size={28} /></Link>
+        <Link className="brand" to="/">
+          {(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))
+            ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} />
+            : <Zap size={28} />
+          }
+        </Link>
         <nav className="desktop-nav">
           <Link to="/#products">Sản phẩm</Link>
           <Link to="/#services">Dịch vụ</Link>

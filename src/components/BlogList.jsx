@@ -10,10 +10,12 @@ export default function BlogList() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [siteSettings, setSiteSettings] = useState({ brand: 'Xe Nâng Bắc Ninh' })
 
   useEffect(() => {
     document.title = 'Blog | Kiến thức Xe Nâng & Logistics'
     loadPosts(1)
+    api('/public/site-settings').then(s => setSiteSettings(s || {})).catch(() => {})
   }, [])
 
   const loadPosts = async (p) => {
@@ -41,7 +43,12 @@ export default function BlogList() {
 
       {/* ── Header ── */}
       <header className="site-header blog-site-header">
-        <Link className="brand" to="/"><Zap size={28} /></Link>
+        <Link className="brand" to="/">
+          {(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))
+            ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} />
+            : <Zap size={28} />
+          }
+        </Link>
         <nav className="desktop-nav">
           <Link to="/#products">Sản phẩm</Link>
           <Link to="/#services">Dịch vụ</Link>
