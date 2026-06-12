@@ -1,4 +1,4 @@
-node_modules/
+﻿node_modules/
 dist/
 .env
 .env.*
@@ -16,3 +16,5 @@ pnpm-debug.log*
 .idea/
 .qoder/
 screenshot*.png
+
+temp_node_process.txt
