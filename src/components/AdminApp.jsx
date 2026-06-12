@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowRight, BarChart3, ImageUp, LogOut, Mail, MessageCircle, Moon, Plus, Settings, Sun, Truck } from 'lucide-react'
+import { ArrowRight, BarChart3, FileText, ImageUp, LogOut, Mail, MessageCircle, Moon, Plus, Settings, Sun, Truck } from 'lucide-react'
 import { api, clearToken, getToken, setToken } from '../api'
 import { useTheme } from '../hooks'
 import AdminProducts from './AdminProducts'
@@ -7,6 +7,7 @@ import AdminCategories from './AdminCategories'
 import AdminServices from './AdminServices'
 import AdminLeads from './AdminLeads'
 import AdminSettings from './AdminSettings'
+import AdminBlog from './AdminBlog'
 import { notify } from '../toast'
 
 export default function AdminApp() {
@@ -19,16 +20,18 @@ export default function AdminApp() {
   const [services, setServices] = useState([])
   const [leads, setLeads] = useState([])
   const [settings, setSettings] = useState({ brand: '', hotline: '', zalo: '', email: '', address: '', mapEmbed: '', logo: '' })
+  const [blogPosts, setBlogPosts] = useState([])
 
   const loadAdmin = async () => {
-    const [adminCategories, adminProductsData, adminServices, adminLeadsData, adminSettings] = await Promise.all([
-      api('/admin/categories'), api('/admin/products'), api('/admin/services'), api('/admin/leads'), api('/admin/site-settings')
+    const [adminCategories, adminProductsData, adminServices, adminLeadsData, adminSettings, adminBlog] = await Promise.all([
+      api('/admin/categories'), api('/admin/products'), api('/admin/services'), api('/admin/leads'), api('/admin/site-settings'), api('/admin/blog')
     ])
     setCategories(adminCategories)
     setProducts(adminProductsData?.items || adminProductsData || [])
     setServices(adminServices)
     setLeads(adminLeadsData?.items || adminLeadsData || [])
     setSettings(adminSettings || settings)
+    setBlogPosts(adminBlog?.items || adminBlog || [])
   }
   useEffect(() => { if (token) loadAdmin().catch((error) => notify.error(error.message)) }, [token])
 
@@ -98,6 +101,8 @@ export default function AdminApp() {
           <hr />
           <a className={tab === 'leads' ? 'active' : ''} onClick={() => setTab('leads')}><MessageCircle size={18} /> Lead</a>
           <hr />
+          <a className={tab === 'blog' ? 'active' : ''} onClick={() => setTab('blog')}><FileText size={18} /> Blog</a>
+          <hr />
           <a className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}><Settings size={18} /> Cấu hình</a>
         </nav>
         <div className="sidebar-footer">
@@ -114,6 +119,7 @@ export default function AdminApp() {
         {tab === 'categories' && <AdminCategories categories={categories} onRefresh={loadAdmin} />}
         {tab === 'services' && <AdminServices services={services} onRefresh={loadAdmin} />}
         {tab === 'leads' && <AdminLeads leads={leads} onRefresh={loadAdmin} />}
+        {tab === 'blog' && <AdminBlog posts={blogPosts} onRefresh={loadAdmin} />}
         {tab === 'settings' && <AdminSettings settings={settings} onRefresh={loadAdmin} />}
       </section>
     </main>

@@ -63,6 +63,40 @@ router.get('/services', async (req, res, next) => {
   }
 })
 
+router.get('/services/:slug', async (req, res, next) => {
+  try {
+    const service = await prisma.service.findFirst({ where: { slug: req.params.slug, isActive: true } })
+    if (!service) return res.status(404).json({ message: 'Không tìm thấy dịch vụ.' })
+    res.json(service)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/blog', async (req, res, next) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const limit = Math.min(20, Math.max(1, Number(req.query.limit) || 6))
+    const [items, total] = await Promise.all([
+      prisma.blogPost.findMany({ where: { isPublished: true }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+      prisma.blogPost.count({ where: { isPublished: true } })
+    ])
+    res.json({ items, total, page, limit, totalPages: Math.ceil(total / limit) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/blog/:slug', async (req, res, next) => {
+  try {
+    const post = await prisma.blogPost.findFirst({ where: { slug: req.params.slug, isPublished: true } })
+    if (!post) return res.status(404).json({ message: 'Không tìm thấy bài viết.' })
+    res.json(post)
+  } catch (error) {
+    next(error)
+  }
+})
+
 router.post('/leads', leadLimiter, validate(leadSchema), async (req, res, next) => {
   try {
     const { name, phone, company, need, productId } = req.body

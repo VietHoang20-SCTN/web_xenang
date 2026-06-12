@@ -191,4 +191,47 @@ router.put('/site-settings', validate(siteSettingsSchema), async (req, res, next
   }
 })
 
+router.get('/blog', async (req, res, next) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50))
+    const [items, total] = await Promise.all([
+      prisma.blogPost.findMany({ orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+      prisma.blogPost.count()
+    ])
+    res.json({ items, total, page, limit, totalPages: Math.ceil(total / limit) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/blog', async (req, res, next) => {
+  try {
+    const { title, slug, excerpt, content, coverImage, tags, isPublished } = req.body
+    const post = await prisma.blogPost.create({ data: { title, slug: slug || slugify(title), excerpt, content, coverImage, tags, isPublished } })
+    res.status(201).json(post)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.put('/blog/:id', async (req, res, next) => {
+  try {
+    const { title, slug, excerpt, content, coverImage, tags, isPublished } = req.body
+    const post = await prisma.blogPost.update({ where: { id: req.params.id }, data: { title, slug: slug || slugify(title), excerpt, content, coverImage, tags, isPublished } })
+    res.json(post)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.delete('/blog/:id', async (req, res, next) => {
+  try {
+    await prisma.blogPost.delete({ where: { id: req.params.id } })
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

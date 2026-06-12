@@ -65,9 +65,23 @@ model Service {
   title       String
   slug        String   @unique
   description String?
+  content     String?
   icon        String?
   sortOrder   Int      @default(0)
   isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String?
+  coverImage  String?
+  tags        Json     @default("[]")
+  isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

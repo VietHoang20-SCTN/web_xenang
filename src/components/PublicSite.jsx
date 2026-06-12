@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, Building2, CheckCircle2, ClipboardList, Factory, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, Building2, Calendar, CheckCircle2, ClipboardList, Factory, FileText, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { categories as fallbackCategories, products as fallbackProducts, services as fallbackServices, siteSettings as fallbackSettings } from '../data'
 import { mapEmbedUrl, serviceIcons } from '../constants'
@@ -13,6 +14,7 @@ export default function PublicSite() {
   const [categories, setCategories] = useState(fallbackCategories)
   const [products, setProducts] = useState(fallbackProducts)
   const [serviceItems, setServiceItems] = useState(fallbackServices.map((service, index) => ({ ...service, id: service.title, icon: ['Truck', 'PackageCheck', 'Settings', 'Factory'][index] || 'Settings' })))
+  const [blogPosts, setBlogPosts] = useState([])
   const [siteSettings, setSiteSettings] = useState(fallbackSettings)
   const [activeCategory, setActiveCategory] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -25,11 +27,12 @@ export default function PublicSite() {
   const [selectedProduct, setSelectedProduct] = useState(null)
 
   useEffect(() => {
-    Promise.all([api('/public/categories'), api('/public/products'), api('/public/services'), api('/public/site-settings')]).then(([apiCategories, apiProducts, apiServices, apiSettings]) => {
+    Promise.all([api('/public/categories'), api('/public/products'), api('/public/services'), api('/public/site-settings'), api('/public/blog?limit=3')]).then(([apiCategories, apiProducts, apiServices, apiSettings, apiBlog]) => {
       setCategories(apiCategories || fallbackCategories)
       setProducts(apiProducts || fallbackProducts)
       setServiceItems((prev) => (apiServices?.length ? apiServices : prev))
       setSiteSettings(apiSettings || fallbackSettings)
+      setBlogPosts(apiBlog?.items || [])
     }).catch(() => {})
   }, [])
 
@@ -103,7 +106,7 @@ export default function PublicSite() {
 
     <header className="site-header">
       <a className="brand" href="#home">{(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark)) ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} /> : <Zap size={28} />}</a>
-      <nav className="desktop-nav"><a href="#products" className={activeSection === 'products' ? 'active' : ''}>Sản phẩm</a><a href="#services" className={activeSection === 'services' ? 'active' : ''}>Dịch vụ</a><a href="#about" className={activeSection === 'about' ? 'active' : ''}>Giới thiệu</a><a href="#contact" className={activeSection === 'contact' ? 'active' : ''}>Liên hệ</a></nav>
+      <nav className="desktop-nav"><a href="#products" className={activeSection === 'products' ? 'active' : ''}>Sản phẩm</a><a href="#services" className={activeSection === 'services' ? 'active' : ''}>Dịch vụ</a><Link to="/blog">Blog</Link><a href="#about" className={activeSection === 'about' ? 'active' : ''}>Giới thiệu</a><a href="#contact" className={activeSection === 'contact' ? 'active' : ''}>Liên hệ</a></nav>
       <div className="header-actions">
         <div className={`header-search ${searchOpen ? 'open' : ''}`}>
           <button className="search-toggle" onClick={() => setSearchOpen(!searchOpen)} aria-label="Tìm kiếm"><Search size={20} /></button>
@@ -191,7 +194,7 @@ export default function PublicSite() {
              )}
 
              <div className="product-body">
-               <h3>{product.name}</h3>
+               <Link to={`/san-pham/${product.slug || product.id}`}><h3>{product.name}</h3></Link>
                <p className="product-desc">{product.summary}</p>
 
                <div className="spec-chips">
@@ -208,7 +211,7 @@ export default function PublicSite() {
                  )}
                </div>
 
-               <div className="product-actions">
+               <Link to={`/san-pham/${product.slug || product.id}`} className="detail-link">Xem chi tiết <ArrowRight size={14} /></Link><div className="product-actions">
                  <button className="quote-btn" onClick={() => { setLeadForm({ ...leadForm, productId: product.id, need: `Tư vấn ${product.name}` }); document.getElementById('quote').scrollIntoView({ behavior: 'smooth' }); }}>
                    <ArrowRight size={16} /> Nhận báo giá
                  </button>
@@ -268,7 +271,40 @@ export default function PublicSite() {
           <p><Mail size={18} /> {siteSettings.email}</p>
         </div>
       </section>
-    </main>
+
+      {/* Blog */}
+      {blogPosts.length > 0 && (
+        <section id="blog" className="section reveal-clip">
+          <div className="section-heading reveal-blur">
+            <span>Blog</span>
+            <h2>Kiến thức & Tin tức</h2>
+            <p>Cập nhật kiến thức về xe nâng, thiết bị kho và giải pháp logistics.</p>
+          </div>
+          <div className="blog-grid homepage-blog">
+            {blogPosts.map((post, i) => (
+              <article key={post.id} className={`blog-card reveal-scale stagger-${i + 1}`}>
+                {post.coverImage && (
+                  <Link to={`/blog/${post.slug}`} className="blog-card-image">
+                    <img src={assetUrl(post.coverImage)} alt={post.title} loading="lazy" />
+                  </Link>
+                )}
+                <div className="blog-card-body">
+                  <div className="blog-card-meta">
+                    <span><Calendar size={14} /> {new Date(post.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  </div>
+                  <Link to={`/blog/${post.slug}`}><h3>{post.title}</h3></Link>
+                  {post.excerpt && <p>{post.excerpt}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="section-cta">
+            <Link to="/blog" className="primary-btn">Xem tất cả bài viết <ArrowRight size={18} /></Link>
+          </div>
+        </section>
+      )}
+
+
 
     {/* Album Modal */}
     {album && <AlbumModal album={album} albumIndex={albumIndex} setAlbumIndex={setAlbumIndex} selectedProduct={selectedProduct} onClose={() => { setAlbum(null); setSelectedProduct(null) }} siteSettings={siteSettings} onQuote={(productId, need) => { setLeadForm({ ...leadForm, productId, need }); setAlbum(null); setSelectedProduct(null) }} />}

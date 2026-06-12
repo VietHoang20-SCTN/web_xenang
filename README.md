@@ -126,13 +126,14 @@ npm run prisma:seed
 
 | Field | Value |
 |---|---|
-| Build Command | `npm install --include=dev && npm run prisma:generate && npm run build` |
+| Build Command | `npm install && npm run prisma:generate && npm run build` |
 | Start Command | `node server/index.js` |
 | Instance Type | **Free** |
 
-4. Thêm **Environment Variables**:
+4. Thêm **Environment Variables** (quan trọng: `NPM_CONFIG_PRODUCTION=false` để cài devDependencies):
 
 ```
+NPM_CONFIG_PRODUCTION=false
 NODE_ENV=production
 DATABASE_URL=postgresql://... (Neon connection string)
 JWT_SECRET=5e8fecfc8718327fbe024e9029c7ef7c249d2da31abbda88908c822981db4561
