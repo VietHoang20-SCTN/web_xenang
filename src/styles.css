@@ -6830,15 +6830,19 @@ a.service-card:hover h3 {
 
 /* ─── Contact Section ─── */
 .contact-section {
-  padding: 80px 6vw 100px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 6vw;
 }
 
 .contact-grid {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 36px;
+  max-width: 1300px;
+  width: 100%;
   align-items: stretch;
 }
 
@@ -6846,7 +6850,7 @@ a.service-card:hover h3 {
 .map-card {
   position: relative;
   overflow: hidden;
-  min-height: 480px;
+  min-height: 560px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, .1);
   box-shadow: 0 24px 64px rgba(0, 0, 0, .2);
@@ -6856,14 +6860,14 @@ a.service-card:hover h3 {
 .contact-section iframe {
   width: 100%;
   height: 100%;
-  min-height: 480px;
+  min-height: 560px;
   border: 0;
   display: block;
   filter: var(--map-filter);
 }
 
 .map-fallback {
-  min-height: 380px;
+  min-height: 440px;
   display: grid;
   place-items: center;
   align-content: center;
@@ -6904,7 +6908,7 @@ a.service-card:hover h3 {
   flex-direction: column;
   justify-content: center;
   gap: 24px;
-  padding: 36px 32px;
+  padding: 40px 36px;
   border-radius: 20px;
   background: rgba(255, 255, 255, .05);
   backdrop-filter: blur(20px);
@@ -6933,7 +6937,7 @@ a.service-card:hover h3 {
 }
 
 .contact-panel h2 {
-  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -6943,7 +6947,7 @@ a.service-card:hover h3 {
 .contact-items {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .contact-item {
@@ -7016,17 +7020,22 @@ a.service-card:hover h3 {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
+  .contact-section {
+    min-height: auto;
+    padding: 64px 6vw;
+  }
+
   .contact-grid {
     grid-template-columns: 1fr;
     gap: 24px;
   }
 
   .map-card {
-    min-height: 360px;
+    min-height: 380px;
   }
 
   .contact-section iframe {
-    min-height: 360px;
+    min-height: 380px;
   }
 
   .contact-panel {
