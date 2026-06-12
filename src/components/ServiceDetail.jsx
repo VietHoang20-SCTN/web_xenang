@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Phone } from 'lucide-react'
+import { ArrowRight, Phone } from 'lucide-react'
 import { api } from '../api'
-import { useTheme } from '../hooks'
 import { notify } from '../toast'
 import { services as fallbackServices } from '../data'
+import PublicNav from './PublicNav'
 
 export default function ServiceDetail() {
   const { slug } = useParams()
-  const { theme, toggleTheme } = useTheme()
   const [service, setService] = useState(null)
   const [loading, setLoading] = useState(true)
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', company: '', need: '' })
@@ -58,21 +57,7 @@ export default function ServiceDetail() {
         {Array.from({ length: 6 }).map((_, i) => <span key={i} className={`orb orb-${i + 1}`} />)}
       </div>
 
-      <header className="site-header">
-        <Link className="brand" to="/"><ArrowLeft size={24} /></Link>
-        <nav className="desktop-nav">
-          <Link to="/#products">Sản phẩm</Link>
-          <Link to="/#services">Dịch vụ</Link>
-          <Link to="/blog">Blog</Link>
-          <Link to="/#contact">Liên hệ</Link>
-        </nav>
-        <div className="header-actions">
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Chuyển đổi chế độ sáng/tối">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          <a className="phone-link" href="tel:0900000000"><Phone size={18} />0900 000 000</a>
-        </div>
-      </header>
+      <PublicNav currentPage="services" />
 
       <main className="detail-page">
         <div className="detail-breadcrumb">

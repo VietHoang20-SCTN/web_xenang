@@ -23,7 +23,7 @@ function AdminLoader() {
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <Toaster
-      position="top-right"
+      position="bottom-center"
       toastOptions={{
         duration: 3500,
         success: { duration: 3000 },

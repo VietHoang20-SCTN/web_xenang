@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Phone, X } from 'lucide-react'
+import { ArrowRight, Phone, X } from 'lucide-react'
 import { api, assetUrl } from '../api'
-import { useTheme } from '../hooks'
 import { notify } from '../toast'
 import { categories as fallbackCategories, products as fallbackProducts } from '../data'
+import PublicNav from './PublicNav'
 
 export default function ProductDetail() {
   const { slug } = useParams()
-  const { theme, toggleTheme } = useTheme()
   const [product, setProduct] = useState(null)
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -67,21 +66,7 @@ export default function ProductDetail() {
         {Array.from({ length: 6 }).map((_, i) => <span key={i} className={`orb orb-${i + 1}`} />)}
       </div>
 
-      <header className="site-header">
-        <Link className="brand" to="/"><ArrowLeft size={24} /></Link>
-        <nav className="desktop-nav">
-          <Link to="/#products">Sản phẩm</Link>
-          <Link to="/#services">Dịch vụ</Link>
-          <Link to="/blog">Blog</Link>
-          <Link to="/#contact">Liên hệ</Link>
-        </nav>
-        <div className="header-actions">
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Chuyển đổi chế độ sáng/tối">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          <a className="phone-link" href={`tel:0900000000`}><Phone size={18} />0900 000 000</a>
-        </div>
-      </header>
+      <PublicNav currentPage="products" />
 
       <main className="detail-page">
         <div className="detail-breadcrumb">

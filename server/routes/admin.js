@@ -111,8 +111,8 @@ router.get('/services', async (req, res, next) => {
 
 router.post('/services', validate(serviceSchema), async (req, res, next) => {
   try {
-    const { title, slug, description, icon, sortOrder, isActive } = req.body
-    const service = await prisma.service.create({ data: { title, slug: slug || slugify(title), description, icon, sortOrder, isActive } })
+    const { title, slug, description, content, icon, sortOrder, isActive } = req.body
+    const service = await prisma.service.create({ data: { title, slug: slug || slugify(title), description, content, icon, sortOrder, isActive } })
     res.status(201).json(service)
   } catch (error) {
     next(error)
@@ -121,8 +121,8 @@ router.post('/services', validate(serviceSchema), async (req, res, next) => {
 
 router.put('/services/:id', validate(serviceSchema), async (req, res, next) => {
   try {
-    const { title, slug, description, icon, sortOrder, isActive } = req.body
-    const service = await prisma.service.update({ where: { id: req.params.id }, data: { title, slug: slug || slugify(title), description, icon, sortOrder, isActive } })
+    const { title, slug, description, content, icon, sortOrder, isActive } = req.body
+    const service = await prisma.service.update({ where: { id: req.params.id }, data: { title, slug: slug || slugify(title), description, content, icon, sortOrder, isActive } })
     res.json(service)
   } catch (error) {
     next(error)

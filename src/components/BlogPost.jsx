@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Calendar, Clock, Phone, Share2, Tag, Zap } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Calendar, Clock, Share2, Tag, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
-import { useTheme } from '../hooks'
+import PublicNav from './PublicNav'
 
 export default function BlogPost() {
   const { slug } = useParams()
-  const { theme, toggleTheme } = useTheme()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [siteSettings, setSiteSettings] = useState({ brand: 'Xe Nâng Bắc Ninh' })
@@ -55,27 +54,7 @@ export default function BlogPost() {
       </div>
 
       {/* ── Header ── */}
-      <header className="site-header blog-site-header">
-        <Link className="brand" to="/">
-          {(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))
-            ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} />
-            : <Zap size={28} />
-          }
-        </Link>
-        <nav className="desktop-nav">
-          <Link to="/#products">Sản phẩm</Link>
-          <Link to="/#services">Dịch vụ</Link>
-          <Link to="/blog">Blog</Link>
-          <Link to="/#about">Giới thiệu</Link>
-          <Link to="/#contact">Liên hệ</Link>
-        </nav>
-        <div className="header-actions">
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Đổi theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          <a className="phone-link" href="tel:0900000000"><Phone size={18} />0900 000 000</a>
-        </div>
-      </header>
+      <PublicNav siteSettings={siteSettings} currentPage="blog" />
 
       {/* ── Article Hero ── */}
       <section className="blog-article-hero">

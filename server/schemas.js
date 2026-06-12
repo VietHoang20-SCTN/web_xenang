@@ -34,6 +34,7 @@ const serviceSchema = z.object({
   title: z.string().min(1, 'Tên dịch vụ là bắt buộc.').max(200),
   slug: z.string().max(250).optional().default(''),
   description: z.string().max(5000).optional().nullable(),
+  content: z.string().max(50000).optional().nullable(),
   icon: z.string().max(100).optional().nullable(),
   sortOrder: z.coerce.number().int().min(0).max(9999).default(0),
   isActive: z.boolean().default(true),
@@ -85,7 +86,7 @@ function validate(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body)
     if (!result.success) {
-      const firstError = result.error.errors[0]
+      const firstError = result.error.issues[0]
       return res.status(400).json({ message: firstError.message })
     }
     req.body = result.data

@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Calendar, Clock, Phone, Search, Tag, Zap } from 'lucide-react'
+import { ArrowRight, Calendar, Clock, Tag, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
-import { useTheme } from '../hooks'
+import PublicNav from './PublicNav'
 
 export default function BlogList() {
-  const { theme, toggleTheme } = useTheme()
   const [posts, setPosts] = useState([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -42,27 +41,7 @@ export default function BlogList() {
       </div>
 
       {/* ── Header ── */}
-      <header className="site-header blog-site-header">
-        <Link className="brand" to="/">
-          {(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))
-            ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} />
-            : <Zap size={28} />
-          }
-        </Link>
-        <nav className="desktop-nav">
-          <Link to="/#products">Sản phẩm</Link>
-          <Link to="/#services">Dịch vụ</Link>
-          <Link to="/blog" className="active">Blog</Link>
-          <Link to="/#about">Giới thiệu</Link>
-          <Link to="/#contact">Liên hệ</Link>
-        </nav>
-        <div className="header-actions">
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Đổi theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          <a className="phone-link" href="tel:0900000000"><Phone size={18} />0900 000 000</a>
-        </div>
-      </header>
+      <PublicNav siteSettings={siteSettings} currentPage="blog" />
 
       {/* ── Hero ── */}
       <section className="blog-hero-section">

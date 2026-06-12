@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Building2, Calendar, CheckCircle2, ClipboardList, Factory, FileText, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { ArrowRight, Building2, Calendar, CheckCircle2, ClipboardList, Clock, Factory, FileText, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { categories as fallbackCategories, products as fallbackProducts, services as fallbackServices, siteSettings as fallbackSettings } from '../data'
 import { mapEmbedUrl, serviceIcons } from '../constants'
@@ -11,6 +11,7 @@ import { notify } from '../toast'
 export default function PublicSite() {
   const { theme, toggleTheme } = useTheme()
   const scrollProgress = useScrollProgress()
+  const location = useLocation()
   const [categories, setCategories] = useState(fallbackCategories)
   const [products, setProducts] = useState(fallbackProducts)
   const [serviceItems, setServiceItems] = useState(fallbackServices.map((service, index) => ({ ...service, id: service.title, icon: ['Truck', 'PackageCheck', 'Settings', 'Factory'][index] || 'Settings' })))
@@ -35,6 +36,24 @@ export default function PublicSite() {
       setBlogPosts(apiBlog?.items || [])
     }).catch(() => {})
   }, [])
+
+  // Scroll to hash section on mount / when hash changes
+  useEffect(() => {
+    const hash = location.hash?.replace('#', '')
+    if (!hash) return
+    // Retry a few times in case DOM isn't ready yet
+    let attempts = 0
+    const tryScroll = () => {
+      const el = document.getElementById(hash)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' })
+      } else if (attempts < 10) {
+        attempts++
+        setTimeout(tryScroll, 150)
+      }
+    }
+    setTimeout(tryScroll, 200)
+  }, [location.hash])
 
   // Track active section for nav highlighting
   useEffect(() => {
@@ -211,15 +230,16 @@ export default function PublicSite() {
                  )}
                </div>
 
-               <Link to={`/san-pham/${product.slug || product.id}`} className="detail-link">Xem chi tiết <ArrowRight size={14} /></Link><div className="product-actions">
-                 <button className="quote-btn" onClick={() => { setLeadForm({ ...leadForm, productId: product.id, need: `Tư vấn ${product.name}` }); document.getElementById('quote').scrollIntoView({ behavior: 'smooth' }); }}>
-                   <ArrowRight size={16} /> Nhận báo giá
-                 </button>
-                 <a className="zalo-btn" href={siteSettings.zalo} target="_blank" rel="noopener noreferrer">
-                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                   Chat Zalo
-                 </a>
-               </div>
+               <div className="product-actions">
+                  <Link to={`/san-pham/${product.slug || product.id}`} className="detail-link">Xem chi tiết</Link>
+                  <button className="quote-btn" onClick={() => { setLeadForm({ ...leadForm, productId: product.id, need: `Tư vấn ${product.name}` }); document.getElementById('quote').scrollIntoView({ behavior: 'smooth' }); }}>
+                    Nhận báo giá
+                  </button>
+                  <a className="zalo-btn" href={siteSettings.zalo} target="_blank" rel="noopener noreferrer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    Chat Zalo
+                  </a>
+                </div>
              </div>
            </article>)}
          </div>
@@ -230,7 +250,15 @@ export default function PublicSite() {
       <section id="services" className="section alt-section reveal-clip">
         <div className="section-heading reveal-blur"><span>Dịch vụ</span><h2>Bán, cho thuê, sửa chữa và phụ tùng</h2></div>
         <div className="service-grid">
-          {serviceItems.map((service, index) => { const Icon = serviceIcons[service.icon] || Settings; return <div className={`service-card reveal-left stagger-${index % 8 + 1}`} key={service.id || service.title}><Icon /><h3>{service.title}</h3><p>{service.description}</p></div> })}
+          {serviceItems.map((service, index) => {
+            const Icon = serviceIcons[service.icon] || Settings
+            const serviceSlug = service.slug || service.title?.toLowerCase().replace(/\s+/g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            return (
+              <Link to={`/dich-vu/${serviceSlug}`} className={`service-card reveal-left stagger-${index % 8 + 1}`} key={service.id || service.title}>
+                <Icon /><h3>{service.title}</h3><p>{service.description}</p>
+              </Link>
+            )
+          })}
         </div>
       </section>
 
@@ -300,23 +328,58 @@ export default function PublicSite() {
             <h2>Kiến thức & Tin tức</h2>
             <p>Cập nhật kiến thức về xe nâng, thiết bị kho và giải pháp logistics.</p>
           </div>
-          <div className="blog-grid homepage-blog">
-            {blogPosts.map((post, i) => (
-              <article key={post.id} className={`blog-card reveal-scale stagger-${i + 1}`}>
-                {post.coverImage && (
-                  <Link to={`/blog/${post.slug}`} className="blog-card-image">
-                    <img src={assetUrl(post.coverImage)} alt={post.title} loading="lazy" />
-                  </Link>
+          <div className="homepage-blog">
+            {/* Featured first post */}
+            <article className="blog-featured reveal-scale stagger-1">
+              <Link to={`/blog/${blogPosts[0].slug}`} className="blog-featured-image">
+                {blogPosts[0].coverImage ? (
+                  <img src={assetUrl(blogPosts[0].coverImage)} alt={blogPosts[0].title} loading="eager" />
+                ) : (
+                  <div className="blog-featured-fallback"><FileText size={40} /></div>
                 )}
-                <div className="blog-card-body">
-                  <div className="blog-card-meta">
-                    <span><Calendar size={14} /> {new Date(post.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                  </div>
-                  <Link to={`/blog/${post.slug}`}><h3>{post.title}</h3></Link>
-                  {post.excerpt && <p>{post.excerpt}</p>}
+                <div className="blog-featured-overlay" />
+                <span className="blog-featured-badge">Mới nhất</span>
+              </Link>
+              <div className="blog-featured-body">
+                <div className="blog-featured-meta">
+                  <span><Calendar size={14} /> {new Date(blogPosts[0].createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  <span className="blog-dot">·</span>
+                  <span><Clock size={14} /> 5 phút đọc</span>
                 </div>
-              </article>
-            ))}
+                <Link to={`/blog/${blogPosts[0].slug}`}><h3>{blogPosts[0].title}</h3></Link>
+                {blogPosts[0].excerpt && <p>{blogPosts[0].excerpt}</p>}
+                {(blogPosts[0].tags || []).length > 0 && (
+                  <div className="blog-featured-tags">
+                    {(blogPosts[0].tags || []).slice(0, 3).map((tag, j) => (
+                      <span key={j} className="blog-tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <Link to={`/blog/${blogPosts[0].slug}`} className="blog-read-more">Đọc bài viết <ArrowRight size={16} /></Link>
+              </div>
+            </article>
+
+            {/* Remaining posts grid */}
+            {blogPosts.length > 1 && (
+              <div className="blog-mini-grid">
+                {blogPosts.slice(1).map((post, i) => (
+                  <article key={post.id} className={`blog-mini-card reveal-scale stagger-${i + 2}`}>
+                    <Link to={`/blog/${post.slug}`} className="blog-mini-image">
+                      {post.coverImage ? (
+                        <img src={assetUrl(post.coverImage)} alt={post.title} loading="lazy" />
+                      ) : (
+                        <div className="blog-mini-fallback"><FileText size={22} /></div>
+                      )}
+                    </Link>
+                    <div className="blog-mini-body">
+                      <span className="blog-mini-date"><Calendar size={12} /> {new Date(post.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}</span>
+                      <Link to={`/blog/${post.slug}`}><h4>{post.title}</h4></Link>
+                      {post.excerpt && <p>{post.excerpt}</p>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
           <div className="section-cta">
             <Link to="/blog" className="primary-btn">Xem tất cả bài viết <ArrowRight size={18} /></Link>
