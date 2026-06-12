@@ -1,12 +1,8 @@
 const cloudinary = require('cloudinary').v2
 
-// Configure Cloudinary using a single CLOUDINARY_URL environment variable,
-// or individual CLOUDINARY_CLOUD_NAME / API_KEY / API_SECRET.
+// Configure Cloudinary using a single CLOUDINARY_URL environment variable.
 cloudinary.config({
   url: process.env.CLOUDINARY_URL,
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
 const FOLDER = process.env.CLOUDINARY_FOLDER || 'xenang'
