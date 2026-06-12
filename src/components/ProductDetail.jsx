@@ -10,6 +10,7 @@ export default function ProductDetail() {
   const { slug } = useParams()
   const [product, setProduct] = useState(null)
   const [categories, setCategories] = useState([])
+  const [siteSettings, setSiteSettings] = useState({})
   const [loading, setLoading] = useState(true)
   const [mainImage, setMainImage] = useState('')
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', company: '', need: '' })
@@ -37,6 +38,7 @@ export default function ProductDetail() {
         setLoading(false)
       }
     })()
+    api('/public/site-settings').then(s => setSiteSettings(s || {})).catch(() => {})
   }, [slug])
 
   const submitLead = async (e) => {
@@ -66,7 +68,7 @@ export default function ProductDetail() {
         {Array.from({ length: 6 }).map((_, i) => <span key={i} className={`orb orb-${i + 1}`} />)}
       </div>
 
-      <PublicNav currentPage="products" />
+      <PublicNav siteSettings={siteSettings} currentPage="products" />
 
       <main className="detail-page">
         <div className="detail-breadcrumb">

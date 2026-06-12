@@ -894,22 +894,19 @@ body::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-pill);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border-color);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
   color: var(--text-primary);
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-glass), var(--glass-inset);
   transition: all .3s ease;
 }
 
 .search-toggle:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
+  background: var(--glass-bg);
+  color: var(--accent);
 }
 
 .search-input {
@@ -3808,33 +3805,204 @@ footer {
   }
 }
 
-@media (max-width: 1020px) {
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE HEADER — 3 breakpoints, no overlap
+   ══════════════════════════════════════════════════════════════ */
 
+/* ── Tablet: 768px – 1020px ── */
+@media (max-width: 1020px) {
+  .site-header {
+    min-height: 72px;
+    padding: 8px 4vw;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    height: 30px;
+  }
+
+  /* Compact nav — still visible, smaller */
+  .desktop-nav {
+    gap: 2px;
+    padding: 4px;
+    font-size: .82rem;
+  }
+
+  .desktop-nav a {
+    padding: 8px 12px;
+  }
+
+  /* Compact phone link */
+  .phone-link {
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: .82rem;
+  }
+
+  /* Compact theme toggle */
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Compact search toggle */
+  .search-toggle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .search-input {
+    width: 180px !important;
+  }
+
+  @keyframes searchSlideIn {
+    from { opacity: 0; width: 0; }
+    to   { opacity: 1; width: 180px; }
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  /* Keep menu-btn hidden on tablet */
+  .menu-btn { display: none; }
+}
+
+/* ── Mobile: < 768px ── */
+@media (max-width: 768px) {
+  .site-header {
+    min-height: 60px;
+    padding: 6px 4vw;
+    gap: 8px;
+  }
+
+  .brand-logo {
+    height: 26px;
+  }
+
+  /* Hide desktop nav & phone on mobile */
   .desktop-nav,
   .phone-link {
     display: none;
   }
 
+  /* Compact actions */
+  .header-actions {
+    gap: 4px;
+  }
+
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .theme-toggle:hover {
+    transform: none;
+    background: var(--glass-bg);
+  }
+
+  .theme-toggle svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-toggle {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Search input default (closed) */
   .search-input {
-    width: 160px !important;
+    width: 140px !important;
   }
 
   @keyframes searchSlideIn {
-    from {
-      opacity: 0;
-      width: 0;
-    }
-
-    to {
-      opacity: 1;
-      width: 160px;
-    }
+    from { opacity: 0; width: 0; }
+    to   { opacity: 1; width: 140px; }
   }
 
+  /* Show hamburger menu */
   .menu-btn {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all .3s ease;
   }
 
+  .menu-btn:hover {
+    background: var(--glass-bg);
+    color: var(--accent);
+  }
+
+  /* Hide logo when search is open — keep space */
+  .site-header.search-active .brand {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Search takes over header */
+  .site-header.search-active .header-search {
+    flex: 1;
+    position: static;
+  }
+
+  .site-header.search-active .search-input {
+    position: relative;
+    right: auto;
+    top: auto;
+    transform: none;
+    width: 100% !important;
+    max-width: none;
+    border-radius: var(--radius-pill);
+  }
+}
+
+/* ── Small Mobile: < 400px ── */
+@media (max-width: 400px) {
+  .site-header {
+    min-height: 54px;
+    padding: 4px 3vw;
+    gap: 4px;
+  }
+
+  .brand-logo {
+    height: 22px;
+  }
+
+  .theme-toggle,
+  .search-toggle,
+  .menu-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .header-actions {
+    gap: 2px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   END RESPONSIVE HEADER
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── General mobile layout (768px) ── */
+@media (max-width: 768px) {
   .hero,
   .about-section,
   .quote-section,

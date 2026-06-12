@@ -9,6 +9,7 @@ import PublicNav from './PublicNav'
 export default function ServiceDetail() {
   const { slug } = useParams()
   const [service, setService] = useState(null)
+  const [siteSettings, setSiteSettings] = useState({})
   const [loading, setLoading] = useState(true)
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', company: '', need: '' })
   const [submitting, setSubmitting] = useState(false)
@@ -32,6 +33,7 @@ export default function ServiceDetail() {
         setLoading(false)
       }
     })()
+    api('/public/site-settings').then(s => setSiteSettings(s || {})).catch(() => {})
   }, [slug])
 
   const submitLead = async (e) => {
@@ -57,7 +59,7 @@ export default function ServiceDetail() {
         {Array.from({ length: 6 }).map((_, i) => <span key={i} className={`orb orb-${i + 1}`} />)}
       </div>
 
-      <PublicNav currentPage="services" />
+      <PublicNav siteSettings={siteSettings} currentPage="services" />
 
       <main className="detail-page">
         <div className="detail-breadcrumb">

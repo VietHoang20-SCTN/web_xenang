@@ -37,32 +37,42 @@ export default function PublicSite() {
     }).catch(() => {})
   }, [])
 
-  // Scroll to hash section on mount / when hash changes
+  // Scroll to section when navigated from another page (via location.state)
   useEffect(() => {
-    const hash = location.hash?.replace('#', '')
-    if (!hash) return
+    const sectionId = location.state?.scrollTo
+    if (!sectionId) return
+    // Immediately highlight the target nav item
+    setActiveSection(sectionId)
     // Retry a few times in case DOM isn't ready yet
     let attempts = 0
     const tryScroll = () => {
-      const el = document.getElementById(hash)
+      const el = document.getElementById(sectionId)
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' })
-      } else if (attempts < 10) {
+      } else if (attempts < 15) {
         attempts++
         setTimeout(tryScroll, 150)
       }
     }
-    setTimeout(tryScroll, 200)
-  }, [location.hash])
+    // Small delay to let React finish rendering
+    setTimeout(tryScroll, 300)
+  }, [location.state])
 
-  // Track active section for nav highlighting
+  // Track active section for nav highlighting — pick the most visible one
   useEffect(() => {
     const sections = document.querySelectorAll('section[id]')
     const observer = new IntersectionObserver((entries) => {
+      // Find the entry with the highest intersection ratio
+      let best = null
       entries.forEach((entry) => {
-        if (entry.isIntersecting) setActiveSection(entry.target.id)
+        if (!best || entry.intersectionRatio > best.intersectionRatio) {
+          best = entry
+        }
       })
-    }, { threshold: 0.3, rootMargin: '-80px 0px -40% 0px' })
+      if (best && best.isIntersecting) {
+        setActiveSection(best.target.id)
+      }
+    }, { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], rootMargin: '-80px 0px 0px 0px' })
     sections.forEach((section) => observer.observe(section))
     return () => observer.disconnect()
   }, [])
@@ -123,12 +133,18 @@ export default function PublicSite() {
     {/* Scroll progress bar */}
     <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
 
-    <header className="site-header">
+    <header className={`site-header ${searchOpen ? 'search-active' : ''}`}>
       <a className="brand" href="#home">{(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark)) ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} /> : <Zap size={28} />}</a>
-      <nav className="desktop-nav"><a href="#products" className={activeSection === 'products' ? 'active' : ''}>Sản phẩm</a><a href="#services" className={activeSection === 'services' ? 'active' : ''}>Dịch vụ</a><Link to="/blog">Blog</Link><a href="#about" className={activeSection === 'about' ? 'active' : ''}>Giới thiệu</a><a href="#contact" className={activeSection === 'contact' ? 'active' : ''}>Liên hệ</a></nav>
+      <nav className="desktop-nav">
+        <a href="#products" className={activeSection === 'products' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('products'); document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }) }}>Sản phẩm</a>
+        <a href="#services" className={activeSection === 'services' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('services'); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }) }}>Dịch vụ</a>
+        <Link to="/blog">Blog</Link>
+        <a href="#about" className={activeSection === 'about' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('about'); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }) }}>Giới thiệu</a>
+        <a href="#contact" className={activeSection === 'contact' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('contact'); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }) }}>Liên hệ</a>
+      </nav>
       <div className="header-actions">
         <div className={`header-search ${searchOpen ? 'open' : ''}`}>
-          <button className="search-toggle" onClick={() => setSearchOpen(!searchOpen)} aria-label="Tìm kiếm"><Search size={20} /></button>
+          <button className="search-toggle" onClick={() => setSearchOpen(!searchOpen)} aria-label={searchOpen ? 'Đóng tìm kiếm' : 'Tìm kiếm'}>{searchOpen ? <X size={20} /> : <Search size={20} />}</button>
           {searchOpen && <input className="search-input" type="text" placeholder="Tìm sản phẩm..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} autoFocus />}
         </div>
         <button className="theme-toggle" onClick={toggleTheme} aria-label="Chuyển đổi chế độ sáng/tối">
@@ -141,9 +157,11 @@ export default function PublicSite() {
 
     {mobileMenuOpen && <div className="mobile-panel">
       <button className="close-btn" onClick={() => setMobileMenuOpen(false)}><X /></button>
-      <a onClick={() => setMobileMenuOpen(false)} href="#products">Sản phẩm</a>
-      <a onClick={() => setMobileMenuOpen(false)} href="#services">Dịch vụ</a>
-      <a onClick={() => setMobileMenuOpen(false)} href="#contact">Liên hệ</a>
+      <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('products'); document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }) }} href="#products">Sản phẩm</a>
+      <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('services'); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }) }} href="#services">Dịch vụ</a>
+      <Link to="/blog" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
+      <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('about'); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }) }} href="#about">Giới thiệu</a>
+      <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('contact'); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }) }} href="#contact">Liên hệ</a>
     </div>}
 
     <main className="snap-main">

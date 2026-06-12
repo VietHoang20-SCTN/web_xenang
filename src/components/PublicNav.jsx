@@ -6,31 +6,23 @@ import { assetUrl } from '../api'
 
 /**
  * Shared header nav used across all public pages (BlogList, BlogPost, ProductDetail, ServiceDetail).
- * Uses React Router navigate for cross-page hash navigation so the browser scrolls to the
- * correct section even when coming from a different route.
+ * Uses React Router navigate with state to signal PublicSite which section to scroll to.
  */
 export default function PublicNav({ siteSettings = {}, currentPage }) {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
-  const navLink = (href, label, isActive) => {
-    const id = href.split('#')[1]
-    const handleClick = (e) => {
-      e.preventDefault()
-      if (window.location.pathname === '/' || window.location.pathname === '') {
-        // Already on homepage, just scroll smoothly
-        if (id) {
-          const el = document.getElementById(id)
-          if (el) el.scrollIntoView({ behavior: 'smooth' })
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-        }
-      } else {
-        // Navigate to homepage with hash — PublicSite will handle the scroll
-        navigate(`/#${id}`, { replace: true })
-      }
+  const goToSection = (e, sectionId) => {
+    e.preventDefault()
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      // Already on homepage — scroll directly
+      const el = document.getElementById(sectionId)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+      else window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      // Navigate to homepage, passing the target section via state
+      navigate('/', { state: { scrollTo: sectionId } })
     }
-    return <a href={href} className={isActive ? 'active' : ''} onClick={handleClick}>{label}</a>
   }
 
   return (
@@ -42,11 +34,11 @@ export default function PublicNav({ siteSettings = {}, currentPage }) {
         }
       </Link>
       <nav className="desktop-nav">
-        {navLink('/#products', 'Sản phẩm', currentPage === 'products')}
-        {navLink('/#services', 'Dịch vụ', currentPage === 'services')}
+        <a href="#products" className={currentPage === 'products' ? 'active' : ''} onClick={(e) => goToSection(e, 'products')}>Sản phẩm</a>
+        <a href="#services" className={currentPage === 'services' ? 'active' : ''} onClick={(e) => goToSection(e, 'services')}>Dịch vụ</a>
         <Link to="/blog" className={currentPage === 'blog' ? 'active' : ''}>Blog</Link>
-        {navLink('/#about', 'Giới thiệu', currentPage === 'about')}
-        {navLink('/#contact', 'Liên hệ', currentPage === 'contact')}
+        <a href="#about" className={currentPage === 'about' ? 'active' : ''} onClick={(e) => goToSection(e, 'about')}>Giới thiệu</a>
+        <a href="#contact" className={currentPage === 'contact' ? 'active' : ''} onClick={(e) => goToSection(e, 'contact')}>Liên hệ</a>
       </nav>
       <div className="header-actions">
         <button className="theme-toggle" onClick={toggleTheme} aria-label="Đổi theme">
