@@ -12,7 +12,7 @@ const uploadRoutes = require('./routes/upload')
 const prisma = require('./prisma')
 const { sanitize } = require('./utils')
 
-// Ensure uploads directory exists (Render ephemeral disk)
+// Ensure local uploads directory exists (fallback; new uploads go to Cloudinary)
 const uploadsDir = path.join(__dirname, 'uploads')
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
 

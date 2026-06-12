@@ -1,15 +1,9 @@
-const fs = require('fs')
-const path = require('path')
 const express = require('express')
 const multer = require('multer')
-const sharp = require('sharp')
 const { requireAuth } = require('../middleware/auth')
-const { slugify } = require('../utils')
+const { uploadLogo, uploadProductImage } = require('../cloudinary')
 
 const router = express.Router()
-const uploadDir = path.join(__dirname, '..', 'uploads')
-
-fs.mkdirSync(uploadDir, { recursive: true })
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -41,31 +35,14 @@ function logoHandler(fn) {
 
 router.post('/product-image', requireAuth, uploadHandler(async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn ảnh sản phẩm.' })
-  const base = slugify(path.basename(req.file.originalname, path.extname(req.file.originalname))) || 'product-image'
-  const filename = `${Date.now()}-${base}.webp`
-  const outputPath = path.join(uploadDir, filename)
-
-  await sharp(req.file.buffer)
-    .rotate()
-    .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toFile(outputPath)
-
-  res.status(201).json({ url: `/uploads/${filename}` })
+  const url = await uploadProductImage(req.file.buffer)
+  res.status(201).json({ url })
 }))
 
 router.post('/logo', requireAuth, logoHandler(async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn file logo.' })
-  const filename = `site-logo-${Date.now()}.webp`
-  const outputPath = path.join(uploadDir, filename)
-
-  await sharp(req.file.buffer)
-    .rotate()
-    .resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 90 })
-    .toFile(outputPath)
-
-  res.status(201).json({ url: `/uploads/${filename}` })
+  const url = await uploadLogo(req.file.buffer)
+  res.status(201).json({ url })
 }))
 
 module.exports = router
