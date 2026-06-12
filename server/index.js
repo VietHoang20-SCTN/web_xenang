@@ -75,12 +75,24 @@ if (process.env.NODE_ENV === 'production') {
   app.use((req, res) => res.status(404).json({ message: 'Không tìm thấy API.' }))
 }
 app.use((error, req, res, next) => {
-  console.error(error)
+  console.error('[ERROR]', error.name, error.message, error.code || '')
   if (error.name === 'PrismaClientInitializationError') {
     return res.status(503).json({ message: 'Không kết nối được PostgreSQL. Vui lòng kiểm tra DATABASE_URL và đảm bảo database server đang chạy.' })
   }
-  const status = error.code === 'P2002' ? 409 : 500
-  const message = error.code === 'P2002' ? 'Dữ liệu đã tồn tại, vui lòng kiểm tra slug hoặc email.' : 'Có lỗi xảy ra, vui lòng thử lại.'
+  if (error.name === 'PrismaClientKnownRequestError') {
+    if (error.code === 'P2002') return res.status(409).json({ message: 'Dữ liệu đã tồn tại, vui lòng kiểm tra slug hoặc email.' })
+    if (error.code === 'P2025') return res.status(404).json({ message: 'Không tìm thấy dữ liệu.' })
+    return res.status(500).json({ message: `Lỗi database: ${error.message}` })
+  }
+  // Multer / file upload errors
+  if (error.name === 'MulterError') {
+    return res.status(400).json({ message: `Lỗi upload: ${error.message}` })
+  }
+  if (error.message?.includes('Chỉ cho phép upload file ảnh')) {
+    return res.status(400).json({ message: error.message })
+  }
+  const status = error.status || error.statusCode || 500
+  const message = error.message || 'Có lỗi xảy ra, vui lòng thử lại.'
   res.status(status).json({ message })
 })
 
