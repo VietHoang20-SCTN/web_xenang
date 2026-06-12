@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Building2, Calendar, CheckCircle2, ClipboardList, Factory, FileText, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
@@ -258,17 +258,42 @@ export default function PublicSite() {
 
       {/* Contact */}
       <section id="contact" className="section contact-section reveal-clip">
-        <div className="map-card reveal-left">
+        <div className="section-heading reveal-blur">
+          <span>Liên hệ</span>
+          <h2>{siteSettings.brand}</h2>
+          <p>Hãy liên hệ với chúng tôi để được tư vấn và báo giá tốt nhất.</p>
+        </div>
+
+        {/* Map */}
+        <div className="map-card reveal-scale">
           {mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)
             ? <iframe title="Bản đồ" src={mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)} loading="lazy"></iframe>
             : <div className="map-fallback"><MapPinned size={34} /><strong>Không thể nhúng trực tiếp link Google Maps này</strong><span>Link rút gọn từ admin vẫn được dùng để mở bản đồ bên ngoài.</span></div>}
         </div>
-        <div className="contact-info reveal-right">
-          <span>Liên hệ</span>
-          <h2>{siteSettings.brand}</h2>
-          <p><MapPin size={18} /> {siteSettings.address}</p>
-          <p><Phone size={18} /> {siteSettings.hotline}</p>
-          <p><Mail size={18} /> {siteSettings.email}</p>
+
+        {/* Contact Cards */}
+        <div className="contact-cards">
+          <div className="contact-card reveal-scale stagger-1">
+            <div className="contact-card-icon"><MapPin size={22} /></div>
+            <div className="contact-card-body">
+              <h4>Địa chỉ</h4>
+              <p>{siteSettings.address || 'Đang cập nhật'}</p>
+            </div>
+          </div>
+          <div className="contact-card reveal-scale stagger-2">
+            <div className="contact-card-icon"><Phone size={22} /></div>
+            <div className="contact-card-body">
+              <h4>Hotline</h4>
+              <a href={`tel:${siteSettings.hotline}`}>{siteSettings.hotline || '0900 000 000'}</a>
+            </div>
+          </div>
+          <div className="contact-card reveal-scale stagger-3">
+            <div className="contact-card-icon"><Mail size={22} /></div>
+            <div className="contact-card-body">
+              <h4>Email</h4>
+              <a href={`mailto:${siteSettings.email}`}>{siteSettings.email || 'contact@xenang.vn'}</a>
+            </div>
+          </div>
         </div>
       </section>
 
