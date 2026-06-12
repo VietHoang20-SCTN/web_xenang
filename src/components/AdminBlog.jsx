@@ -8,13 +8,17 @@ const empty = { title: '', slug: '', excerpt: '', content: '', coverImage: '', t
 export default function AdminBlog({ posts, onRefresh }) {
   const [form, setForm] = useState(empty)
   const [editing, setEditing] = useState(false)
+  const [showForm, setShowForm] = useState(false)
   const [tagInput, setTagInput] = useState('')
 
-  const reset = () => { setForm(empty); setEditing(false); setTagInput('') }
+  const reset = () => { setForm(empty); setEditing(false); setShowForm(false); setTagInput('') }
+
+  const newPost = () => { setForm({ ...empty }); setEditing(false); setShowForm(true); setTagInput('') }
 
   const edit = (post) => {
     setForm({ ...post, tags: post.tags || [] })
     setEditing(true)
+    setShowForm(true)
   }
 
   const save = async (e) => {
@@ -75,10 +79,10 @@ export default function AdminBlog({ posts, onRefresh }) {
     <div className="admin-section">
       <div className="admin-toolbar">
         <h3>Quản lý Blog ({posts?.length || 0} bài)</h3>
-        <button className="primary-btn" onClick={reset}><Plus size={18} /> Viết bài mới</button>
+        <button className="primary-btn" onClick={newPost}><Plus size={18} /> Viết bài mới</button>
       </div>
 
-      {(form.title || editing) && (
+      {showForm && (
         <form className="admin-form blog-form" onSubmit={save}>
           <div className="form-row">
             <div className="form-group flex-2">
