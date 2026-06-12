@@ -258,17 +258,18 @@ export default function PublicSite() {
 
       {/* Contact */}
       <section id="contact" className="section contact-section reveal-clip">
-        <div className="section-heading reveal-blur">
-          <span>Liên hệ</span>
-          <h2>{siteSettings.brand}</h2>
-          <p>Hãy liên hệ với chúng tôi để được tư vấn và báo giá tốt nhất.</p>
-        </div>
-
-        {/* Map */}
+        {/* Map — full width, large */}
         <div className="map-card reveal-scale">
           {mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)
             ? <iframe title="Bản đồ" src={mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address)} loading="lazy"></iframe>
             : <div className="map-fallback"><MapPinned size={34} /><strong>Không thể nhúng trực tiếp link Google Maps này</strong><span>Link rút gọn từ admin vẫn được dùng để mở bản đồ bên ngoài.</span></div>}
+        </div>
+
+        {/* Heading */}
+        <div className="section-heading reveal-blur">
+          <span>Liên hệ</span>
+          <h2>Hãy liên hệ với chúng tôi</h2>
+          <p>Đội ngũ chuyên gia sẵn sàng tư vấn giải pháp xe nâng & thiết bị kho phù hợp nhất cho doanh nghiệp bạn.</p>
         </div>
 
         {/* Contact Cards */}
