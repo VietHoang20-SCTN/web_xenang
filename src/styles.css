@@ -6839,9 +6839,9 @@ a.service-card:hover h3 {
 
 .contact-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 36px;
-  max-width: 1300px;
+  grid-template-columns: 7fr 3fr;
+  gap: 32px;
+  max-width: 1400px;
   width: 100%;
   align-items: stretch;
 }
@@ -6850,7 +6850,7 @@ a.service-card:hover h3 {
 .map-card {
   position: relative;
   overflow: hidden;
-  min-height: 560px;
+  min-height: 520px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, .1);
   box-shadow: 0 24px 64px rgba(0, 0, 0, .2);
@@ -6860,14 +6860,14 @@ a.service-card:hover h3 {
 .contact-section iframe {
   width: 100%;
   height: 100%;
-  min-height: 560px;
+  min-height: 520px;
   border: 0;
   display: block;
   filter: var(--map-filter);
 }
 
 .map-fallback {
-  min-height: 440px;
+  min-height: 400px;
   display: grid;
   place-items: center;
   align-content: center;
@@ -6907,8 +6907,8 @@ a.service-card:hover h3 {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 24px;
-  padding: 40px 36px;
+  gap: 22px;
+  padding: 32px 28px;
   border-radius: 20px;
   background: rgba(255, 255, 255, .05);
   backdrop-filter: blur(20px);
@@ -6937,7 +6937,7 @@ a.service-card:hover h3 {
 }
 
 .contact-panel h2 {
-  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -6947,14 +6947,14 @@ a.service-card:hover h3 {
 .contact-items {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .contact-item {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  padding: 14px;
   border-radius: 14px;
   background: rgba(255, 255, 255, .04);
   border: 1px solid rgba(255, 255, 255, .06);
@@ -6977,8 +6977,8 @@ a.service-card:hover h3 {
 }
 
 .contact-item-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(251, 191, 36, .15), rgba(251, 191, 36, .05));
   display: flex;
@@ -6990,23 +6990,23 @@ a.service-card:hover h3 {
 
 .contact-item-label {
   display: block;
-  font-size: .72rem;
+  font-size: .7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--text-muted);
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .contact-item p {
-  font-size: .9rem;
+  font-size: .85rem;
   color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
 }
 
 .contact-item a {
-  font-size: .9rem;
+  font-size: .85rem;
   color: var(--accent);
   font-weight: 700;
   text-decoration: none;
@@ -7031,11 +7031,11 @@ a.service-card:hover h3 {
   }
 
   .map-card {
-    min-height: 380px;
+    min-height: 360px;
   }
 
   .contact-section iframe {
-    min-height: 380px;
+    min-height: 360px;
   }
 
   .contact-panel {
@@ -7049,12 +7049,12 @@ a.service-card:hover h3 {
   }
 
   .map-card {
-    min-height: 280px;
+    min-height: 260px;
     border-radius: 14px;
   }
 
   .contact-section iframe {
-    min-height: 280px;
+    min-height: 260px;
   }
 }
 
