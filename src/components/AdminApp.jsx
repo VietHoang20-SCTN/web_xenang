@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { flushSync } from 'react-dom'
 import { ArrowRight, BarChart3, FileText, History, ImageUp, LogOut, Mail, MessageCircle, Moon, Plus, Settings, Sun, Truck } from 'lucide-react'
 import { api } from '../api'
 import { useTheme } from '../hooks'
@@ -17,6 +18,7 @@ export default function AdminApp() {
   const { theme, toggleTheme } = useTheme()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadingLogin, setLoadingLogin] = useState(false)
   const [login, setLogin] = useState({ email: '', password: '' })
   const [tab, setTab] = useState('products')
   const [categories, setCategories] = useState([])
@@ -68,12 +70,15 @@ export default function AdminApp() {
 
   const doLogin = async (event) => {
     event.preventDefault()
+    flushSync(() => setLoadingLogin(true))
     try {
       const result = await api('/auth/login', { method: 'POST', body: JSON.stringify(login) })
       setUser(result.user)
       notify.success(`Chào mừng ${result.user?.name || ''}!`)
     } catch (error) {
       notify.error(error.message)
+    } finally {
+      setLoadingLogin(false)
     }
   }
 
@@ -118,7 +123,10 @@ export default function AdminApp() {
               <label className="login-label"><Settings size={18} /><span>Mật khẩu</span></label>
               <input type="password" required placeholder="••••••••••" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} />
             </div>
-            <button className="primary-btn login-submit" type="submit">Đăng nhập <ArrowRight size={18} /></button>
+            <button className="primary-btn login-submit" type="submit" disabled={loadingLogin}>
+              {loadingLogin ? <span className="login-spinner" /> : null}
+              {loadingLogin ? 'Đang đăng nhập...' : 'Đăng nhập'} <ArrowRight size={18} />
+            </button>
             <a className="login-back-link" href="/">← Về trang chủ website</a>
           </form>
         </div>

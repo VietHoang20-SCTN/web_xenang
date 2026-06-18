@@ -2762,6 +2762,27 @@ button:active,
   font-size: 1rem;
 }
 
+.login-submit:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.login-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: login-spin .6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes login-spin {
+  to { transform: rotate(360deg); }
+}
 .login-back-link {
   text-align: center;
   color: var(--text-muted);
