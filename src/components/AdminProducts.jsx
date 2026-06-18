@@ -44,7 +44,8 @@ export default function AdminProducts({ products, categories, onRefresh }) {
   const editProduct = (product) => setProductForm({
     id: product.id, name: product.name || '', slug: product.slug || '', categoryId: product.categoryId || '',
     tag: product.tag || '', image: product.image || '', gallery: product.gallery || [],
-    summary: product.summary || '', specs: product.specs?.length ? product.specs : [''], isActive: product.isActive ?? true
+    summary: product.summary || '', description: product.description || '', content: product.content || '',
+    specs: product.specs?.length ? product.specs : [''], isActive: product.isActive ?? true
   })
 
   const saveProduct = async (event) => {
@@ -100,6 +101,7 @@ export default function AdminProducts({ products, categories, onRefresh }) {
           ))}</div>
         )}
         <textarea placeholder="Mô tả ngắn" value={productForm.summary} onChange={(e) => setProductForm({ ...productForm, summary: e.target.value })} />
+        <textarea placeholder="Nội dung chi tiết (HTML) - hiển thị bên dưới form báo giá" rows={8} value={productForm.content} onChange={(e) => setProductForm({ ...productForm, content: e.target.value })} />
         <div className="spec-editor">
           <strong>Thông số kỹ thuật</strong>
           {productForm.specs.map((spec, index) => (

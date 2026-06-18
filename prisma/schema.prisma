@@ -52,6 +52,7 @@ model Product {
   gallery     Json      @default("[]")
   summary     String?
   description String?
+  content     String?
   specs       Json      @default("[]")
   isFeatured  Boolean   @default(false)
   isActive    Boolean   @default(true)
@@ -112,6 +113,10 @@ model SiteSetting {
   logoDark     String?
   heroTitle    String?
   heroSubtitle String?
+  aboutTitle   String?
+  aboutBody    String?
+  aboutImage   String?
+  aboutImages  Json      @default("[]")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

@@ -71,6 +71,17 @@ async function uploadProductImage(buffer) {
 }
 
 /**
+ * Upload an about section image to Cloudinary (wide banner, high quality).
+ */
+async function uploadAboutImage(buffer) {
+  return uploadImage(buffer, {
+    width: 1200,
+    height: 800,
+    quality: 88,
+  })
+}
+
+/**
  * Delete an image from Cloudinary by its secure URL.
  * @param {string} url - The full Cloudinary URL to delete.
  */
@@ -85,4 +96,4 @@ async function deleteImage(url) {
   await cloudinary.uploader.destroy(publicId)
 }
 
-module.exports = { uploadImage, uploadLogo, uploadProductImage, deleteImage, cloudinary }
+module.exports = { uploadImage, uploadLogo, uploadProductImage, uploadAboutImage, deleteImage, cloudinary }

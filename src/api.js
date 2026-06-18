@@ -63,3 +63,17 @@ export async function uploadLogo(file) {
   if (!response.ok) throw new Error(data?.message || 'Không upload được logo.')
   return data
 }
+
+export async function uploadAboutImage(file) {
+  const token = getToken()
+  const formData = new FormData()
+  formData.append('image', file)
+  const response = await fetch(`${API_URL}/upload/about-image`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(data?.message || 'Không upload được ảnh giới thiệu.')
+  return data
+}

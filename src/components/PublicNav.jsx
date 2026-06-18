@@ -34,11 +34,11 @@ export default function PublicNav({ siteSettings = {}, currentPage }) {
         }
       </Link>
       <nav className="desktop-nav">
+        <a href="#about" className={currentPage === 'about' ? 'active' : ''} onClick={(e) => goToSection(e, 'about')}>Giới thiệu</a>
         <a href="#products" className={currentPage === 'products' ? 'active' : ''} onClick={(e) => goToSection(e, 'products')}>Sản phẩm</a>
         <a href="#services" className={currentPage === 'services' ? 'active' : ''} onClick={(e) => goToSection(e, 'services')}>Dịch vụ</a>
-        <Link to="/blog" className={currentPage === 'blog' ? 'active' : ''}>Blog</Link>
-        <a href="#about" className={currentPage === 'about' ? 'active' : ''} onClick={(e) => goToSection(e, 'about')}>Giới thiệu</a>
         <a href="#contact" className={currentPage === 'contact' ? 'active' : ''} onClick={(e) => goToSection(e, 'contact')}>Liên hệ</a>
+        <Link to="/blog" className={currentPage === 'blog' ? 'active' : ''}>Blog</Link>
       </nav>
       <div className="header-actions">
         <button className="theme-toggle" onClick={toggleTheme} aria-label="Đổi theme">

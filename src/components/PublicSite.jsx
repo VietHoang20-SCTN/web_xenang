@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowRight, Building2, Calendar, CheckCircle2, ClipboardList, Clock, Factory, FileText, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap } from 'lucide-react'
+import { ArrowRight, Building2, Calendar, CheckCircle2, ClipboardList, Clock, Factory, FileText, Mail, MapPinned, MapPin, Menu, Moon, PackageCheck, Phone, Search, Settings, ShieldCheck, Sun, Users, X, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { categories as fallbackCategories, products as fallbackProducts, services as fallbackServices, siteSettings as fallbackSettings } from '../data'
 import { mapEmbedUrl, serviceIcons } from '../constants'
@@ -26,6 +26,8 @@ export default function PublicSite() {
   const [album, setAlbum] = useState(null)
   const [albumIndex, setAlbumIndex] = useState(0)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [aboutCarouselIndex, setAboutCarouselIndex] = useState(0)
+  const [lightbox, setLightbox] = useState(null) // { images, index }
 
   useEffect(() => {
     Promise.all([api('/public/categories'), api('/public/products'), api('/public/services'), api('/public/site-settings'), api('/public/blog?limit=3')]).then(([apiCategories, apiProducts, apiServices, apiSettings, apiBlog]) => {
@@ -37,10 +39,11 @@ export default function PublicSite() {
     }).catch(() => {})
   }, [])
 
-  // Scroll to section when navigated from another page (via location.state)
+  // Scroll to section when navigated from another page or returning from product/service detail
   useEffect(() => {
-    const sectionId = location.state?.scrollTo
+    const sectionId = location.state?.scrollTo || sessionStorage.getItem('xenang_section')
     if (!sectionId) return
+    sessionStorage.removeItem('xenang_section')
     // Immediately highlight the target nav item
     setActiveSection(sectionId)
     // Retry a few times in case DOM isn't ready yet
@@ -79,6 +82,16 @@ export default function PublicSite() {
 
   useScrollAnimations([products, categories, serviceItems, activeCategory, searchQuery])
   useParallax()
+
+  // Auto-advance about image carousel every 7 seconds
+  useEffect(() => {
+    const images = siteSettings?.aboutImages
+    if (!images?.length || images.length < 2) return
+    const timer = setInterval(() => {
+      setAboutCarouselIndex(prev => (prev + 1) % images.length)
+    }, 7000)
+    return () => clearInterval(timer)
+  }, [siteSettings?.aboutImages])
   const productsSectionRef = useRef(null)
 
   useEffect(() => {
@@ -136,11 +149,11 @@ export default function PublicSite() {
     <header className={`site-header ${searchOpen ? 'search-active' : ''}`}>
       <a className="brand" href="#home">{(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark)) ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} /> : <Zap size={28} />}</a>
       <nav className="desktop-nav">
+        <a href="#about" className={activeSection === 'about' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('about'); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }) }}>Giới thiệu</a>
         <a href="#products" className={activeSection === 'products' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('products'); document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }) }}>Sản phẩm</a>
         <a href="#services" className={activeSection === 'services' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('services'); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }) }}>Dịch vụ</a>
-        <Link to="/blog">Blog</Link>
-        <a href="#about" className={activeSection === 'about' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('about'); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }) }}>Giới thiệu</a>
         <a href="#contact" className={activeSection === 'contact' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActiveSection('contact'); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }) }}>Liên hệ</a>
+        <Link to="/blog">Blog</Link>
       </nav>
       <div className="header-actions">
         <div className={`header-search ${searchOpen ? 'open' : ''}`}>
@@ -154,14 +167,13 @@ export default function PublicSite() {
         <button className="menu-btn" onClick={() => setMobileMenuOpen(true)}><Menu /></button>
       </div>
     </header>
-
     {mobileMenuOpen && <div className="mobile-panel">
       <button className="close-btn" onClick={() => setMobileMenuOpen(false)}><X /></button>
+      <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('about'); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }) }} href="#about">Giới thiệu</a>
       <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('products'); document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }) }} href="#products">Sản phẩm</a>
       <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('services'); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }) }} href="#services">Dịch vụ</a>
-      <Link to="/blog" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
-      <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('about'); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }) }} href="#about">Giới thiệu</a>
       <a onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setActiveSection('contact'); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }) }} href="#contact">Liên hệ</a>
+      <Link to="/blog" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
     </div>}
 
     <main className="snap-main">
@@ -186,6 +198,80 @@ export default function PublicSite() {
           <div className="reveal-rotate stagger-1"><Factory /><strong>Logistics & fulfillment</strong><span>Phù hợp kho vận, trung tâm phân phối.</span></div>
           <div className="reveal-rotate stagger-2"><ShieldCheck /><strong>Uy tín dịch vụ</strong><span>Có bán, cho thuê, phụ tùng và sửa chữa.</span></div>
           <div className="reveal-rotate stagger-3"><PackageCheck /><strong>Thiết bị kho</strong><span>Tập trung xe nâng điện và warehouse equipment.</span></div>
+        </div>
+      </section>
+
+      {/* About & Lead Form */}
+      <section id="about" className="about-quote-section reveal-clip">
+        <div className="about-copy reveal-left">
+          <span className="eyebrow">Định vị thương hiệu</span>
+          <h2>{siteSettings.aboutTitle || 'Website B2B cho doanh nghiệp có hoạt động kho tại miền Bắc.'}</h2>
+          {siteSettings.aboutBody ? (
+            <div className="about-body" dangerouslySetInnerHTML={{ __html: siteSettings.aboutBody }} />
+          ) : (
+            <>
+              <p>Thông tin sản phẩm rõ ràng, CTA ngắn gọn, phù hợp khách hàng logistics, fulfillment, kho lạnh và nhà máy.</p>
+              <div className="audience-card"><h3>Khách hàng mục tiêu</h3><ul><li>Doanh nghiệp logistics và fulfillment</li><li>Kho lạnh, kho hàng hóa, trung tâm phân phối</li><li>Nhà máy sản xuất có nhu cầu nâng hạ</li></ul></div>
+            </>
+          )}
+          {(siteSettings.aboutImages?.length > 0) ? (
+            <div className="about-coverflow">
+              <div className="about-coverflow-stage">
+                {siteSettings.aboutImages.map((img, i) => {
+                  const n = siteSettings.aboutImages.length
+                  const raw = i - aboutCarouselIndex
+                  const offset = raw > n / 2 ? raw - n : raw < -n / 2 ? raw + n : raw
+                  const isCenter = offset === 0
+                  const isVisible = Math.abs(offset) <= 2
+                  if (!isVisible) return null
+                  return (
+                    <div
+                      key={i}
+                      className={`about-coverflow-item${isCenter ? ' active' : ''}`}
+                      style={{
+                        transform: `perspective(1000px) translateX(${offset * 150}px) translateZ(${isCenter ? 60 : -20}px) rotateY(${offset * -8}deg) scale(${isCenter ? 1 : .85})`,
+                        zIndex: 10 - Math.abs(offset),
+                        opacity: Math.max(.25, 1 - Math.abs(offset) * .38),
+                      }}
+                      onClick={() => {
+                        if (isCenter) setLightbox({ images: siteSettings.aboutImages, index: i })
+                        else setAboutCarouselIndex(i)
+                      }}
+                    >
+                      <img src={assetUrl(img)} alt={`Giới thiệu ${i + 1}`} />
+                    </div>
+                  )
+                })}
+              </div>
+              {siteSettings.aboutImages.length > 1 && (
+                <>
+                  <button className="about-coverflow-btn about-coverflow-prev" onClick={() => setAboutCarouselIndex(i => (i === 0 ? siteSettings.aboutImages.length - 1 : i - 1))}>
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button className="about-coverflow-btn about-coverflow-next" onClick={() => setAboutCarouselIndex(i => (i === siteSettings.aboutImages.length - 1 ? 0 : i + 1))}>
+                    <ChevronRight size={20} />
+                  </button>
+                  <div className="about-coverflow-counter">{aboutCarouselIndex + 1} / {siteSettings.aboutImages.length}</div>
+                </>
+              )}
+            </div>
+          ) : siteSettings.aboutImage ? (
+            <div className="about-image-wrap">
+              <img src={assetUrl(siteSettings.aboutImage)} alt="Giới thiệu" className="about-image" />
+            </div>
+          ) : null}
+        </div>
+        <div id="quote" className="lead-card reveal-right">
+          <span className="eyebrow"><ClipboardList size={16} /> Form lead</span>
+          <h2>Yêu cầu tư vấn thuê/mua xe nâng</h2>
+          <p>Form ngắn, tối ưu mobile, lưu trực tiếp vào hệ thống quản trị.</p>
+          <form className="quote-form lead-form" onSubmit={submitLead}>
+            <label className="input-icon"><Users size={18} /><input required placeholder="Họ tên *" value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} /></label>
+            <label className="input-icon"><Phone size={18} /><input required inputMode="tel" placeholder="Số điện thoại *" value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} /></label>
+            <label className="input-icon"><Building2 size={18} /><input placeholder="Công ty (không bắt buộc)" value={leadForm.company} onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })} /></label>
+            <label className="input-icon textarea-icon"><ClipboardList size={18} /><textarea required placeholder="Nhu cầu *: thuê xe, mua xe, sửa chữa, phụ tùng..." value={leadForm.need} onChange={(e) => setLeadForm({ ...leadForm, need: e.target.value })} /></label>
+            <button className="primary-btn" type="submit">Gửi yêu cầu</button>
+          </form>
         </div>
       </section>
 
@@ -231,7 +317,7 @@ export default function PublicSite() {
              )}
 
              <div className="product-body">
-               <Link to={`/san-pham/${product.slug || product.id}`}><h3>{product.name}</h3></Link>
+               <Link to={`/san-pham/${product.slug || product.id}`} onClick={() => sessionStorage.setItem('xenang_section', activeSection)}><h3>{product.name}</h3></Link>
                <p className="product-desc">{product.summary}</p>
 
                <div className="spec-chips">
@@ -249,7 +335,7 @@ export default function PublicSite() {
                </div>
 
                <div className="product-actions">
-                  <Link to={`/san-pham/${product.slug || product.id}`} className="detail-link">Xem chi tiết</Link>
+                  <Link to={`/san-pham/${product.slug || product.id}`} className="detail-link" onClick={() => sessionStorage.setItem('xenang_section', activeSection)}>Xem chi tiết</Link>
                   <button className="quote-btn" onClick={() => { setLeadForm({ ...leadForm, productId: product.id, need: `Tư vấn ${product.name}` }); document.getElementById('quote').scrollIntoView({ behavior: 'smooth' }); }}>
                     Nhận báo giá
                   </button>
@@ -272,33 +358,11 @@ export default function PublicSite() {
             const Icon = serviceIcons[service.icon] || Settings
             const serviceSlug = service.slug || service.title?.toLowerCase().replace(/\s+/g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
             return (
-              <Link to={`/dich-vu/${serviceSlug}`} className={`service-card reveal-left stagger-${index % 8 + 1}`} key={service.id || service.title}>
+              <Link to={`/dich-vu/${serviceSlug}`} className={`service-card reveal-left stagger-${index % 8 + 1}`} onClick={() => sessionStorage.setItem('xenang_section', activeSection)} key={service.id || service.title}>
                 <Icon /><h3>{service.title}</h3><p>{service.description}</p>
               </Link>
             )
           })}
-        </div>
-      </section>
-
-      {/* About & Lead Form */}
-      <section id="about" className="about-quote-section reveal-clip">
-        <div className="about-copy reveal-left">
-          <span className="eyebrow">Định vị thương hiệu</span>
-          <h2>Website B2B cho doanh nghiệp có hoạt động kho tại miền Bắc.</h2>
-          <p>Thông tin sản phẩm rõ ràng, CTA ngắn gọn, phù hợp khách hàng logistics, fulfillment, kho lạnh và nhà máy.</p>
-          <div className="audience-card"><h3>Khách hàng mục tiêu</h3><ul><li>Doanh nghiệp logistics và fulfillment</li><li>Kho lạnh, kho hàng hóa, trung tâm phân phối</li><li>Nhà máy sản xuất có nhu cầu nâng hạ</li></ul></div>
-        </div>
-        <div id="quote" className="lead-card reveal-right">
-          <span className="eyebrow"><ClipboardList size={16} /> Form lead</span>
-          <h2>Yêu cầu tư vấn thuê/mua xe nâng</h2>
-          <p>Form ngắn, tối ưu mobile, lưu trực tiếp vào hệ thống quản trị.</p>
-          <form className="quote-form lead-form" onSubmit={submitLead}>
-            <label className="input-icon"><Users size={18} /><input required placeholder="Họ tên *" value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} /></label>
-            <label className="input-icon"><Phone size={18} /><input required inputMode="tel" placeholder="Số điện thoại *" value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} /></label>
-            <label className="input-icon"><Building2 size={18} /><input placeholder="Công ty (không bắt buộc)" value={leadForm.company} onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })} /></label>
-            <label className="input-icon textarea-icon"><ClipboardList size={18} /><textarea required placeholder="Nhu cầu *: thuê xe, mua xe, sửa chữa, phụ tùng..." value={leadForm.need} onChange={(e) => setLeadForm({ ...leadForm, need: e.target.value })} /></label>
-            <button className="primary-btn" type="submit">Gửi yêu cầu</button>
-          </form>
         </div>
       </section>
 
@@ -349,7 +413,7 @@ export default function PublicSite() {
           <div className="homepage-blog">
             {/* Featured first post */}
             <article className="blog-featured reveal-scale stagger-1">
-              <Link to={`/blog/${blogPosts[0].slug}`} className="blog-featured-image">
+              <Link to={`/blog/${blogPosts[0].slug}`} className="blog-featured-image" onClick={() => sessionStorage.setItem('xenang_section', activeSection)}>
                 {blogPosts[0].coverImage ? (
                   <img src={assetUrl(blogPosts[0].coverImage)} alt={blogPosts[0].title} loading="eager" />
                 ) : (
@@ -364,7 +428,7 @@ export default function PublicSite() {
                   <span className="blog-dot">·</span>
                   <span><Clock size={14} /> 5 phút đọc</span>
                 </div>
-                <Link to={`/blog/${blogPosts[0].slug}`}><h3>{blogPosts[0].title}</h3></Link>
+                <Link to={`/blog/${blogPosts[0].slug}`} onClick={() => sessionStorage.setItem('xenang_section', activeSection)}><h3>{blogPosts[0].title}</h3></Link>
                 {blogPosts[0].excerpt && <p>{blogPosts[0].excerpt}</p>}
                 {(blogPosts[0].tags || []).length > 0 && (
                   <div className="blog-featured-tags">
@@ -373,7 +437,7 @@ export default function PublicSite() {
                     ))}
                   </div>
                 )}
-                <Link to={`/blog/${blogPosts[0].slug}`} className="blog-read-more">Đọc bài viết <ArrowRight size={16} /></Link>
+                <Link to={`/blog/${blogPosts[0].slug}`} className="blog-read-more" onClick={() => sessionStorage.setItem('xenang_section', activeSection)}>Đọc bài viết <ArrowRight size={16} /></Link>
               </div>
             </article>
 
@@ -382,7 +446,7 @@ export default function PublicSite() {
               <div className="blog-mini-grid">
                 {blogPosts.slice(1).map((post, i) => (
                   <article key={post.id} className={`blog-mini-card reveal-scale stagger-${i + 2}`}>
-                    <Link to={`/blog/${post.slug}`} className="blog-mini-image">
+                    <Link to={`/blog/${post.slug}`} className="blog-mini-image" onClick={() => sessionStorage.setItem('xenang_section', activeSection)}>
                       {post.coverImage ? (
                         <img src={assetUrl(post.coverImage)} alt={post.title} loading="lazy" />
                       ) : (
@@ -391,7 +455,7 @@ export default function PublicSite() {
                     </Link>
                     <div className="blog-mini-body">
                       <span className="blog-mini-date"><Calendar size={12} /> {new Date(post.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}</span>
-                      <Link to={`/blog/${post.slug}`}><h4>{post.title}</h4></Link>
+                      <Link to={`/blog/${post.slug}`} onClick={() => sessionStorage.setItem('xenang_section', activeSection)}><h4>{post.title}</h4></Link>
                       {post.excerpt && <p>{post.excerpt}</p>}
                     </div>
                   </article>
@@ -411,6 +475,22 @@ export default function PublicSite() {
 
     {/* Album Modal */}
     {album && <AlbumModal album={album} albumIndex={albumIndex} setAlbumIndex={setAlbumIndex} selectedProduct={selectedProduct} onClose={() => { setAlbum(null); setSelectedProduct(null) }} siteSettings={siteSettings} onQuote={(productId, need) => { setLeadForm({ ...leadForm, productId, need }); setAlbum(null); setSelectedProduct(null) }} />}
+
+    {/* About Image Lightbox */}
+    {lightbox && (
+      <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
+        <button className="lightbox-close" onClick={() => setLightbox(null)}><X size={24} /></button>
+        <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+          <img src={assetUrl(lightbox.images[lightbox.index])} alt={`Giới thiệu ${lightbox.index + 1}`} />
+        </div>
+        {lightbox.images.length > 1 && (
+          <>
+            <button className="lightbox-prev" onClick={() => setLightbox(l => ({ ...l, index: l.index === 0 ? l.images.length - 1 : l.index - 1 }))}><ChevronLeft size={28} /></button>
+            <button className="lightbox-next" onClick={() => setLightbox(l => ({ ...l, index: l.index === l.images.length - 1 ? 0 : l.index + 1 }))}><ChevronRight size={28} /></button>
+          </>
+        )}
+      </div>
+    )}
 
     <div className="floating-actions">
       <a href={`tel:${siteSettings.hotline}`}><Phone size={20} /> <span className="floating-label">Gọi</span></a>

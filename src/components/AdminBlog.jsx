@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import {
   Bold, Calendar, Edit, Eye, EyeOff, Heading2, Heading3,
   ImageUp, Italic, Link, List, ListOrdered, Plus, Save,
@@ -26,24 +26,6 @@ export default function AdminBlog({ posts, onRefresh }) {
     setEditing(true)
     setShowForm(true)
     setActiveTab('write')
-  }
-
-  const save = async (e) => {
-    e.preventDefault()
-    if (!form.title.trim()) return notify.error('Vui lòng nhập tiêu đề.')
-    try {
-      if (editing) {
-        await api(`/admin/blog/${form.id}`, { method: 'PUT', body: JSON.stringify(form) })
-        notify.success('Đã cập nhật bài viết.')
-      } else {
-        await api('/admin/blog', { method: 'POST', body: JSON.stringify(form) })
-        notify.success('Đã tạo bài viết mới.')
-      }
-      reset()
-      onRefresh()
-    } catch (err) {
-      notify.error(err.message)
-    }
   }
 
   const remove = async (id) => {
@@ -86,7 +68,7 @@ export default function AdminBlog({ posts, onRefresh }) {
 
   const execCmd = (cmd, val = null) => {
     document.execCommand(cmd, false, val)
-    if (editorRef.current) setForm({ ...form, content: editorRef.current.innerHTML })
+    if (editorRef.current) setForm(prev => ({ ...prev, content: editorRef.current.innerHTML }))
   }
 
   const insertImage = async (e) => {
@@ -96,7 +78,42 @@ export default function AdminBlog({ posts, onRefresh }) {
     fd.append('image', file)
     try {
       const result = await api('/upload/product-image', { method: 'POST', body: fd, headers: {} })
-      execCmd('insertImage', assetUrl(result.url))
+      const imgUrl = assetUrl(result.url)
+      const editor = editorRef.current
+      if (!editor) return
+      editor.focus()
+      // Restore cursor position if selection is outside editor
+      const sel = window.getSelection()
+      let range
+      if (sel && sel.rangeCount > 0) {
+        range = sel.getRangeAt(0)
+        // If selection is outside the editor, place cursor at end
+        if (!editor.contains(range.commonAncestorContainer)) {
+          range = document.createRange()
+          range.selectNodeContents(editor)
+          range.collapse(false)
+        }
+      } else {
+        range = document.createRange()
+        range.selectNodeContents(editor)
+        range.collapse(false)
+      }
+      // Create image element with default styling
+      const img = document.createElement('img')
+      img.src = imgUrl
+      img.alt = 'Blog image'
+      img.style.width = '50%'
+      img.style.height = 'auto'
+      img.style.borderRadius = '8px'
+      img.style.objectFit = 'cover'
+      // Insert image and move cursor after it
+      range.insertNode(img)
+      range.setStartAfter(img)
+      range.collapse(true)
+      sel.removeAllRanges()
+      sel.addRange(range)
+      // Sync content to state
+      setForm(prev => ({ ...prev, content: editor.innerHTML }))
       notify.success('Đã chèn ảnh.')
     } catch (err) {
       notify.error(err.message)
@@ -109,7 +126,70 @@ export default function AdminBlog({ posts, onRefresh }) {
   }
 
   const handleContentChange = () => {
-    if (editorRef.current) setForm({ ...form, content: editorRef.current.innerHTML })
+    if (editorRef.current) {
+      setForm(prev => ({ ...prev, content: editorRef.current.innerHTML }))
+    }
+  }
+
+  // Sync contentEditable HTML when opening editor (new post or edit post)
+  // or when switching back to Write tab from Preview tab
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = form.content || ''
+    }
+  }, [showForm, activeTab])
+
+  const isFormValid = Boolean(
+    form.title.trim() &&
+    form.slug.trim() &&
+    form.excerpt.trim() &&
+    form.coverImage &&
+    form.content && form.content !== '<br>' && form.content.replace(/<[^>]*>/g, '').trim() !== ''
+  )
+
+  const confirmPublish = () => {
+    const overlay = document.createElement('div')
+    overlay.className = 'blog-confirm-overlay'
+    overlay.innerHTML = `
+      <div class="blog-confirm-card">
+        <h3>Xác nhận đăng bài</h3>
+        <p>Bài viết đã đủ thông tin. Bạn muốn:</p>
+        <div class="blog-confirm-actions">
+          <button class="primary-btn" id="btn-publish"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Xuất bản ngay</button>
+          <button class="secondary-btn" id="btn-draft"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Lưu thành bản nháp</button>
+          <button class="blog-confirm-cancel" id="btn-cancel">Hủy</button>
+        </div>
+      </div>
+    `
+    document.body.appendChild(overlay)
+
+    return new Promise((resolve) => {
+      overlay.querySelector('#btn-publish').onclick = () => { overlay.remove(); resolve(true) }
+      overlay.querySelector('#btn-draft').onclick = () => { overlay.remove(); resolve(false) }
+      overlay.querySelector('#btn-cancel').onclick = () => { overlay.remove(); resolve(null) }
+      overlay.onclick = (e) => { if (e.target === overlay) { overlay.remove(); resolve(null) } }
+    })
+  }
+
+  const save = async (e) => {
+    e.preventDefault()
+    if (!isFormValid) return
+    const shouldPublish = await confirmPublish()
+    if (shouldPublish === null) return
+    const payload = { ...form, isPublished: shouldPublish }
+    try {
+      if (editing) {
+        await api('/admin/blog/' + form.id, { method: 'PUT', body: JSON.stringify(payload) })
+        notify.success('Đã cập nhật bài viết.')
+      } else {
+        await api('/admin/blog', { method: 'POST', body: JSON.stringify(payload) })
+        notify.success(shouldPublish ? 'Bài viết đã được xuất bản!' : 'Bài viết đã được lưu thành bản nháp.')
+      }
+      reset()
+      onRefresh()
+    } catch (err) {
+      notify.error(err.message)
+    }
   }
 
   const formatDate = (d) => new Date(d).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -300,9 +380,8 @@ export default function AdminBlog({ posts, onRefresh }) {
                           className="blog-rich-content"
                           contentEditable
                           suppressContentEditableWarning
-                          dangerouslySetInnerHTML={{ __html: form.content || '' }}
                           onInput={handleContentChange}
-                          onBlur={handleContentChange}
+                          onBlur={() => { if (editorRef.current) setForm(prev => ({ ...prev, content: editorRef.current.innerHTML })) }}
                           data-placeholder="Bắt đầu viết nội dung..."
                         />
                       </div>
@@ -327,7 +406,7 @@ export default function AdminBlog({ posts, onRefresh }) {
                 <button type="button" className="secondary-btn" onClick={reset}>
                   Hủy bỏ
                 </button>
-                <button type="submit" className="primary-btn blog-save-btn">
+                <button type="submit" className={'primary-btn blog-save-btn' + (isFormValid ? '' : ' disabled')} disabled={!isFormValid}>
                   <Save size={18} />
                   {editing ? 'Cập nhật bài viết' : 'Đăng bài viết'}
                 </button>

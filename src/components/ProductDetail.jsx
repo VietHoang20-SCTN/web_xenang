@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowRight, Phone, X } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Phone, Search, X } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { notify } from '../toast'
 import { categories as fallbackCategories, products as fallbackProducts } from '../data'
@@ -15,6 +15,7 @@ export default function ProductDetail() {
   const [mainImage, setMainImage] = useState('')
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', company: '', need: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [lightbox, setLightbox] = useState(null)
 
   useEffect(() => {
     (async () => {
@@ -78,21 +79,28 @@ export default function ProductDetail() {
         </div>
 
         <div className="detail-layout">
-          {/* Gallery */}
           <div className="detail-gallery">
-            <div className="detail-main-image">
+            <div className="detail-main-image" onClick={() => {
+              const imgs = [product.image, ...gallery].filter(Boolean)
+              setLightbox({ images: imgs, index: imgs.indexOf(mainImage) })
+            }}>
               <img src={assetUrl(mainImage)} alt={product.name} />
               {product.tag && <span className="detail-tag">{product.tag}</span>}
+              <div className="detail-zoom-hint"><Search size={16} /> Click để xem ảnh</div>
             </div>
-            {gallery.length > 0 && (
-              <div className="detail-gallery-strip">
-                {gallery.map((img, i) => (
-                  <button key={i} className={`detail-thumb ${img === mainImage ? 'active' : ''}`} onClick={() => setMainImage(img)}>
-                    <img src={assetUrl(img)} alt={`${product.name} ${i + 1}`} />
-                  </button>
-                ))}
-              </div>
-            )}
+            {(() => {
+              const imgs = [product.image, ...gallery].filter(Boolean)
+              if (imgs.length < 2) return null
+              return (
+                <div className="detail-thumb-grid">
+                  {imgs.map((img, i) => (
+                    <button key={i} className={`detail-thumb-card${img === mainImage ? ' active' : ''}`} onClick={() => setMainImage(img)}>
+                      <img src={assetUrl(img)} alt={`${product.name} ${i + 1}`} />
+                    </button>
+                  ))}
+                </div>
+              )
+            })()}
           </div>
 
           {/* Info */}
@@ -131,7 +139,31 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Product Detail Content — full width below the 2-col layout */}
+        {product.content && (
+          <div className="detail-content">
+            <h2>Chi tiết sản phẩm</h2>
+            <div className="detail-content-body" dangerouslySetInnerHTML={{ __html: product.content }} />
+          </div>
+        )}
       </main>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
+          <button className="lightbox-close" onClick={() => setLightbox(null)}><X size={24} /></button>
+          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+            <img src={assetUrl(lightbox.images[lightbox.index])} alt={lightbox.index} />
+          </div>
+          {lightbox.images.length > 1 && (
+            <>
+              <button className="lightbox-prev" onClick={() => setLightbox(l => ({ ...l, index: l.index === 0 ? l.images.length - 1 : l.index - 1 }))}><ChevronLeft size={28} /></button>
+              <button className="lightbox-next" onClick={() => setLightbox(l => ({ ...l, index: l.index === l.images.length - 1 ? 0 : l.index + 1 }))}><ChevronRight size={28} /></button>
+            </>
+          )}
+        </div>
+      )}
 
       <footer>© 2026 Xe Nâng Bắc Ninh. Website bán & cho thuê xe nâng cho doanh nghiệp kho vận.</footer>
     </>

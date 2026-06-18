@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
-import { ImageUp, Moon, Save, Sun, Trash2 } from 'lucide-react'
-import { api, assetUrl, uploadLogo } from '../api'
+import { ImageUp, Moon, Save, Sun, Trash2, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+import { api, assetUrl, uploadLogo, uploadAboutImage } from '../api'
 import { notify } from '../toast'
 
 export default function AdminSettings({ settings, onRefresh }) {
@@ -8,9 +8,12 @@ export default function AdminSettings({ settings, onRefresh }) {
   const [logoDarkPreview, setLogoDarkPreview] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [uploadingDark, setUploadingDark] = useState(false)
+  const [aboutImages, setAboutImages] = useState(null) // null = use settings value
+  const [uploadingAbout, setUploadingAbout] = useState(false)
   const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
   const fileDarkRef = useRef(null)
+  const aboutFileRef = useRef(null)
 
   const onSave = async (event) => {
     event.preventDefault()
@@ -20,6 +23,9 @@ export default function AdminSettings({ settings, onRefresh }) {
       brand: form.brand.value, hotline: form.hotline.value, zalo: form.zalo.value,
       email: form.email.value, address: form.address.value, mapEmbed: form.mapEmbed.value,
       heroTitle: form.heroTitle.value, heroSubtitle: form.heroSubtitle.value,
+      aboutTitle: form.aboutTitle.value, aboutBody: form.aboutBody.value,
+      aboutImage: (aboutImages !== null ? aboutImages[0] : (settings?.aboutImages?.[0])) || null,
+      aboutImages: aboutImages !== null ? aboutImages : (settings?.aboutImages || []),
       logo: logoPreview !== null ? logoPreview : (settings?.logo || null),
       logoDark: logoDarkPreview !== null ? logoDarkPreview : (settings?.logoDark || null)
     }
@@ -59,6 +65,41 @@ export default function AdminSettings({ settings, onRefresh }) {
     }
   }
 
+  const handleAboutImageUpload = async (event) => {
+    const files = event.target.files
+    if (!files?.length) return
+    try {
+      setUploadingAbout(true)
+      const current = aboutImages !== null ? [...aboutImages] : [...(settings?.aboutImages || [])]
+      for (const file of files) {
+        const result = await uploadAboutImage(file)
+        current.push(result.url)
+      }
+      setAboutImages(current)
+      notify.success(`Đã tải ${files.length} ảnh lên!`)
+    } catch (error) {
+      notify.error(error.message)
+    } finally {
+      setUploadingAbout(false)
+      if (aboutFileRef.current) aboutFileRef.current.value = ''
+    }
+  }
+
+  const removeAboutImage = (index) => {
+    const current = aboutImages !== null ? [...aboutImages] : [...(settings?.aboutImages || [])]
+    current.splice(index, 1)
+    setAboutImages(current)
+  }
+
+  const moveAboutImage = (index, direction) => {
+    const current = aboutImages !== null ? [...aboutImages] : [...(settings?.aboutImages || [])]
+    const target = index + direction
+    if (target < 0 || target >= current.length) return
+    ;[current[index], current[target]] = [current[target], current[index]]
+    setAboutImages(current)
+  }
+
+  const currentAboutImages = aboutImages !== null ? aboutImages : (settings?.aboutImages || [])
   const currentLogo = logoPreview !== null ? logoPreview : settings?.logo
   const currentLogoDark = logoDarkPreview !== null ? logoDarkPreview : settings?.logoDark
 
@@ -133,6 +174,51 @@ export default function AdminSettings({ settings, onRefresh }) {
             <label htmlFor="mapEmbed">Mã nhúng Google Maps</label>
             <textarea id="mapEmbed" name="mapEmbed" defaultValue={settings?.mapEmbed || ''} rows={3} placeholder='Dán mã <iframe src="https://www.google.com/maps/embed?..." ...></iframe>' />
             <span className="st-hint">Mở Google Maps → Chia sẻ → Nhúng bản đồ → Sao chép mã HTML</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Section: Giới thiệu */}
+      <section className="st-card">
+        <div className="st-card-title">
+          <span className="st-dot st-dot--blue" />
+          <h3>Giới thiệu</h3>
+        </div>
+        <div className="st-fields">
+          <div className="st-field">
+            <label htmlFor="aboutTitle">Tiêu đề</label>
+            <input id="aboutTitle" name="aboutTitle" defaultValue={settings?.aboutTitle || ''} placeholder="VD: Website B2B cho doanh nghiệp có hoạt động kho tại miền Bắc." />
+          </div>
+          <div className="st-field">
+            <label htmlFor="aboutBody">Nội dung chi tiết</label>
+            <textarea id="aboutBody" name="aboutBody" defaultValue={settings?.aboutBody || ''} rows={10} placeholder="Nhập nội dung giới thiệu... Có thể dùng HTML." />
+          </div>
+          <div className="st-field">
+            <label>Ảnh giới thiệu (có thể tải nhiều ảnh)</label>
+            <div className="st-about-gallery">
+              {currentAboutImages.length > 0 ? (
+                <div className="st-about-gallery-grid">
+                  {currentAboutImages.map((img, i) => (
+                    <div className="st-about-gallery-item" key={`${img}-${i}`}>
+                      <img src={assetUrl(img)} alt={`Ảnh ${i + 1}`} />
+                      <button type="button" className="st-logo-remove" onClick={() => removeAboutImage(i)} title="Xoá ảnh"><Trash2 size={12} /></button>
+                      <div className="st-about-gallery-move">
+                        <button type="button" disabled={i === 0} onClick={() => moveAboutImage(i, -1)}><ChevronLeft size={12} /></button>
+                        <span>{i + 1}/{currentAboutImages.length}</span>
+                        <button type="button" disabled={i === currentAboutImages.length - 1} onClick={() => moveAboutImage(i, 1)}><ChevronRight size={12} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              <div className="st-about-gallery-actions">
+                <button type="button" className="st-about-add-btn" onClick={() => aboutFileRef.current?.click()}>
+                  <ImageIcon size={16} /> Thêm ảnh
+                </button>
+                <input ref={aboutFileRef} type="file" accept="image/*" multiple onChange={handleAboutImageUpload} hidden />
+                {uploadingAbout && <span className="st-uploading">Đang tải...</span>}
+              </div>
+            </div>
           </div>
         </div>
       </section>

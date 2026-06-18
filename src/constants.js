@@ -1,6 +1,6 @@
 import { Factory, PackageCheck, Settings, ShieldCheck, Truck, Zap, Wrench, Cog, Gauge, BatteryFull, HardDrive, BarChart3, ClipboardCheck, Users, Recycle, Timer } from 'lucide-react'
 
-export const emptyProduct = { id: null, name: '', slug: '', categoryId: '', tag: '', image: '', gallery: [], summary: '', specs: [''], isActive: true }
+export const emptyProduct = { id: null, name: '', slug: '', categoryId: '', tag: '', image: '', gallery: [], summary: '', description: '', content: '', specs: [''], isActive: true }
 export const emptyCategory = { id: null, name: '', slug: '', description: '', sortOrder: 0, isActive: true }
 export const emptyService = { id: null, title: '', slug: '', description: '', content: '', icon: 'Settings', sortOrder: 0, isActive: true }
 export const leadStatuses = { NEW: 'Mới', CONTACTED: 'Đã liên hệ', QUOTED: 'Đã báo giá', DONE: 'Hoàn tất', CANCELLED: 'Hủy' }

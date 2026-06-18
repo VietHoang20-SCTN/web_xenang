@@ -1,0 +1,411 @@
+/* ═══════════════════════════════════════════════════════════════
+   🚀 PREMIUM MICRO-INTERACTIONS
+   Animations, hover effects, and interactive enhancements
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Animated Link Underlines ─── */
+.link-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), #FDE68A);
+  border-radius: 2px;
+  transition: width .35s cubic-bezier(.16, 1, .3, 1);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* ─── Glow CTA Pulse ─── */
+.primary-btn-glow {
+  position: relative;
+  z-index: 1;
+}
+
+.primary-btn-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--accent), #FDE68A, var(--accent));
+  z-index: -1;
+  opacity: 0;
+  filter: blur(12px);
+  transition: opacity .4s ease;
+}
+
+.primary-btn-glow:hover::after {
+  opacity: .5;
+}
+
+/* ─── Magnetic Button Wrapper ─── */
+.magnetic-wrap {
+  display: inline-block;
+  will-change: transform;
+  transition: transform .3s cubic-bezier(.16, 1, .3, 1);
+}
+
+/* ─── Ripple Click Effect ─── */
+.ripple-host {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-host .ripple-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, .35) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: scale(0);
+  animation: rippleExpand .6s cubic-bezier(.16, 1, .3, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleExpand {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ─── Card Tilt (3D Perspective) ─── */
+.tilt-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform .15s ease-out, box-shadow .3s ease;
+}
+
+.tilt-card .tilt-inner {
+  transform: translateZ(20px);
+}
+
+/* ─── Shimmer Text ─── */
+.text-shimmer {
+  background: linear-gradient(
+    120deg,
+    var(--text-primary) 0%,
+    var(--accent) 25%,
+    var(--text-primary) 50%,
+    var(--accent) 75%,
+    var(--text-primary) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 4s ease-in-out infinite;
+}
+
+@keyframes textShimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ─── Counter Animation ─── */
+.counter-value {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+.counter-value.counting {
+  animation: counterPulse .3s ease-out;
+}
+
+@keyframes counterPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Stagger Grid Entrance ─── */
+.stagger-grid > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .5s cubic-bezier(.16, 1, .3, 1), transform .5s cubic-bezier(.16, 1, .3, 1);
+}
+
+.stagger-grid.is-visible > *:nth-child(1) { transition-delay: .05s; opacity: 1; transform: none; }
+.stagger-grid.is-visible > *:nth-child(2) { transition-delay: .12s; opacity: 1; transform: none; }
+.stagger-grid.is-visible > *:nth-child(3) { transition-delay: .19s; opacity: 1; transform: none; }
+.stagger-grid.is-visible > *:nth-child(4) { transition-delay: .26s; opacity: 1; transform: none; }
+.stagger-grid.is-visible > *:nth-child(5) { transition-delay: .33s; opacity: 1; transform: none; }
+.stagger-grid.is-visible > *:nth-child(6) { transition-delay: .40s; opacity: 1; transform: none; }
+.stagger-grid.is-visible > *:nth-child(n+7) { transition-delay: .47s; opacity: 1; transform: none; }
+
+/* ─── Hero CTA Arrow Bounce ─── */
+.arrow-bounce {
+  display: inline-flex;
+  animation: arrowBounce 1.8s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ─── Section Heading Underline Reveal ─── */
+.heading-reveal {
+  position: relative;
+  display: inline-block;
+}
+
+.heading-reveal::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), rgba(251, 191, 36, .3));
+  transition: width .8s cubic-bezier(.16, 1, .3, 1);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.heading-reveal.is-visible::after {
+  width: 60px;
+}
+
+/* ─── Glowing Focus ─── */
+.glow-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, .25), 0 0 20px rgba(251, 191, 36, .15);
+  border-color: var(--accent) !important;
+}
+
+/* ─── Floating Badge ─── */
+.float-badge {
+  animation: floatBadge 3s ease-in-out infinite;
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-4px) rotate(1deg); }
+  75% { transform: translateY(2px) rotate(-1deg); }
+}
+
+/* ─── Card Shine Sweep ─── */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, .04) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg) translateX(-100%);
+  transition: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-shine:hover::before {
+  animation: cardSweep .8s cubic-bezier(.16, 1, .3, 1) forwards;
+}
+
+@keyframes cardSweep {
+  to { transform: rotate(45deg) translateX(100%); }
+}
+
+/* ─── Scroll-Driven Glow Border ─── */
+.glow-border {
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, transparent, var(--accent), transparent, var(--accent), transparent);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+
+.glow-border:hover::after {
+  opacity: .6;
+  animation: glowRotate 3s linear infinite;
+}
+
+@keyframes glowRotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Smooth Section Reveal ─── */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity .7s cubic-bezier(.16, 1, .3, 1), transform .7s cubic-bezier(.16, 1, .3, 1);
+}
+
+.section-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Typewriter Effect ─── */
+.typewriter {
+  overflow: hidden;
+  border-right: 3px solid var(--accent);
+  white-space: nowrap;
+  animation: typing 3s steps(40, end), blinkCursor .75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blinkCursor {
+  0%, 100% { border-color: var(--accent); }
+  50% { border-color: transparent; }
+}
+
+/* ─── Smooth Page Transitions ─── */
+.page-slide-enter {
+  animation: pageSlideIn .4s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes pageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── Interactive Icon Pop ─── */
+.icon-pop {
+  transition: transform .3s cubic-bezier(.16, 1, .3, 1);
+}
+
+.icon-pop:hover {
+  transform: scale(1.2);
+}
+
+.icon-pop:active {
+  transform: scale(.95);
+}
+
+/* ─── Glowing Scroll Indicator ─── */
+.scroll-indicator {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  animation: fadeInUp .8s ease 1.5s both;
+  transition: opacity .4s ease;
+}
+
+.scroll-indicator.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scroll-indicator .scroll-mouse {
+  width: 24px;
+  height: 38px;
+  border: 2px solid var(--text-muted);
+  border-radius: 12px;
+  position: relative;
+}
+
+.scroll-indicator .scroll-mouse::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: scrollWheel 1.8s ease-in-out infinite;
+}
+
+@keyframes scrollWheel {
+  0%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(14px); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ─── Reduced Motion Override ─── */
+@media (prefers-reduced-motion: reduce) {
+  .text-shimmer,
+  .arrow-bounce,
+  .float-badge,
+  .typewriter {
+    animation: none !important;
+  }
+
+  .typewriter {
+    border-right: none;
+    width: auto;
+  }
+
+  .stagger-grid > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .magnetic-wrap {
+    transform: none !important;
+  }
+
+  .ripple-host .ripple-circle {
+    display: none;
+  }
+
+  .card-shine::before {
+    display: none;
+  }
+
+  .section-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .scroll-indicator {
+    display: none;
+  }
+}

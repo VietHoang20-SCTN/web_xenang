@@ -74,8 +74,8 @@ router.get('/products', async (req, res, next) => {
 
 router.post('/products', validate(productSchema), async (req, res, next) => {
   try {
-    const { name, slug, categoryId, tag, image, gallery, summary, description, specs, isFeatured, isActive } = req.body
-    const product = await prisma.product.create({ data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description, specs: parseSpecs(specs), isFeatured, isActive } })
+    const { name, slug, categoryId, tag, image, gallery, summary, description, content, specs, isFeatured, isActive } = req.body
+    const product = await prisma.product.create({ data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description, content, specs: parseSpecs(specs), isFeatured, isActive } })
     res.status(201).json(product)
   } catch (error) {
     next(error)
@@ -84,8 +84,8 @@ router.post('/products', validate(productSchema), async (req, res, next) => {
 
 router.put('/products/:id', validate(productSchema), async (req, res, next) => {
   try {
-    const { name, slug, categoryId, tag, image, gallery, summary, description, specs, isFeatured, isActive } = req.body
-    const product = await prisma.product.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description, specs: parseSpecs(specs), isFeatured, isActive } })
+    const { name, slug, categoryId, tag, image, gallery, summary, description, content, specs, isFeatured, isActive } = req.body
+    const product = await prisma.product.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description, content, specs: parseSpecs(specs), isFeatured, isActive } })
     res.json(product)
   } catch (error) {
     next(error)
@@ -182,8 +182,8 @@ router.get('/site-settings', async (req, res, next) => {
 router.put('/site-settings', validate(siteSettingsSchema), async (req, res, next) => {
   try {
     const current = await prisma.siteSetting.findFirst({ orderBy: { createdAt: 'asc' } })
-    const { brand, hotline, zalo, email, address, mapEmbed, logo, logoDark, heroTitle, heroSubtitle } = req.body
-    const data = { brand, hotline, zalo, email, address, mapEmbed, logo, logoDark, heroTitle, heroSubtitle }
+    const { brand, hotline, zalo, email, address, mapEmbed, logo, logoDark, heroTitle, heroSubtitle, aboutTitle, aboutBody, aboutImage, aboutImages } = req.body
+    const data = { brand, hotline, zalo, email, address, mapEmbed, logo, logoDark, heroTitle, heroSubtitle, aboutTitle, aboutBody, aboutImage, aboutImages }
     const settings = current ? await prisma.siteSetting.update({ where: { id: current.id }, data }) : await prisma.siteSetting.create({ data })
     res.json(settings)
   } catch (error) {

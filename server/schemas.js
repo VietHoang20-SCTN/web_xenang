@@ -50,6 +50,7 @@ const productSchema = z.object({
   gallery: z.array(z.string().max(500)).max(20).default([]),
   summary: z.string().max(1000).optional().nullable(),
   description: z.string().max(10000).optional().nullable(),
+  content: z.string().max(50000).optional().nullable(),
   specs: z.array(z.string().max(500)).max(50).default([]),
   isFeatured: z.boolean().default(false),
   isActive: z.boolean().default(true),
@@ -73,6 +74,10 @@ const siteSettingsSchema = z.object({
   logoDark: z.string().max(500).optional().nullable(),
   heroTitle: z.string().max(500).optional().nullable(),
   heroSubtitle: z.string().max(1000).optional().nullable(),
+  aboutTitle: z.string().max(500).optional().nullable(),
+  aboutBody: z.string().max(50000).optional().nullable(),
+  aboutImage: z.string().max(500).optional().nullable(),
+  aboutImages: z.array(z.string().max(500)).max(20).default([]),
 })
 
 // --- Auth: Login ---
