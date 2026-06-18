@@ -11,6 +11,7 @@ const publicRoutes = require('./routes/public')
 const uploadRoutes = require('./routes/upload')
 const prisma = require('./prisma')
 const { sanitize } = require('./utils')
+const cookieParser = require('cookie-parser')
 
 // Ensure local uploads directory exists (fallback; new uploads go to Cloudinary)
 const uploadsDir = path.join(__dirname, 'uploads')
@@ -47,6 +48,7 @@ app.use(compression())
 
 const CLIENT_URLS = (process.env.CORS_ORIGINS || 'http://localhost:5173').split(',').map(s => s.trim())
 app.use(cors({ origin: CLIENT_URLS, credentials: true }))
+app.use(cookieParser())
 app.use(express.json({ limit: '2mb' }))
 app.use((req, res, next) => { if (req.body && typeof req.body === 'object') req.body = sanitize(req.body); next() })
 

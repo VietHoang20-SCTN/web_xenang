@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { ArrowRight, BarChart3, FileText, ImageUp, LogOut, Mail, MessageCircle, Moon, Plus, Settings, Sun, Truck } from 'lucide-react'
-import { api, clearToken, getToken, setToken } from '../api'
+import React, { useEffect, useState, useRef } from 'react'
+import { ArrowRight, BarChart3, FileText, History, ImageUp, LogOut, Mail, MessageCircle, Moon, Plus, Settings, Sun, Truck } from 'lucide-react'
+import { api } from '../api'
 import { useTheme } from '../hooks'
 import AdminProducts from './AdminProducts'
 import AdminCategories from './AdminCategories'
@@ -8,11 +8,15 @@ import AdminServices from './AdminServices'
 import AdminLeads from './AdminLeads'
 import AdminSettings from './AdminSettings'
 import AdminBlog from './AdminBlog'
+import AdminAuditLog from './AdminAuditLog'
 import { notify } from '../toast'
+
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 
 export default function AdminApp() {
   const { theme, toggleTheme } = useTheme()
-  const [token, updateToken] = useState(getToken())
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [login, setLogin] = useState({ email: '', password: '' })
   const [tab, setTab] = useState('products')
   const [categories, setCategories] = useState([])
@@ -21,6 +25,33 @@ export default function AdminApp() {
   const [leads, setLeads] = useState([])
   const [settings, setSettings] = useState({ brand: '', hotline: '', zalo: '', email: '', address: '', mapEmbed: '', logo: '' })
   const [blogPosts, setBlogPosts] = useState([])
+
+  // ── Idle timeout ──
+  const idleRef = useRef(null)
+  const resetIdle = () => {
+    if (idleRef.current) clearTimeout(idleRef.current)
+    idleRef.current = setTimeout(() => {
+      notify.warning('Phiên đăng nhập đã hết hạn do không hoạt động.')
+      doLogout()
+    }, IDLE_TIMEOUT_MS)
+  }
+  useEffect(() => {
+    if (!user) return
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart']
+    events.forEach(e => window.addEventListener(e, resetIdle))
+    resetIdle()
+    return () => events.forEach(e => window.removeEventListener(e, resetIdle))
+  }, [user])
+
+  // ── Check if already logged in via cookie ──
+  useEffect(() => {
+    api('/auth/me').then(u => {
+      setUser(u)
+      setLoading(false)
+    }).catch(() => {
+      setLoading(false)
+    })
+  }, [])
 
   const loadAdmin = async () => {
     const [adminCategories, adminProductsData, adminServices, adminLeadsData, adminSettings, adminBlog] = await Promise.all([
@@ -33,21 +64,28 @@ export default function AdminApp() {
     setSettings(adminSettings || settings)
     setBlogPosts(adminBlog?.items || adminBlog || [])
   }
-  useEffect(() => { if (token) loadAdmin().catch((error) => notify.error(error.message)) }, [token])
+  useEffect(() => { if (user) loadAdmin().catch(e => notify.error(e.message)) }, [user])
 
   const doLogin = async (event) => {
     event.preventDefault()
     try {
       const result = await api('/auth/login', { method: 'POST', body: JSON.stringify(login) })
-      setToken(result.token); updateToken(result.token)
+      setUser(result.user)
       notify.success(`Chào mừng ${result.user?.name || ''}!`)
     } catch (error) {
       notify.error(error.message)
     }
   }
-  const logout = () => { clearToken(); updateToken(null); notify.success('Đã đăng xuất.') }
 
-  if (!token) return (
+  const doLogout = async () => {
+    try { await api('/auth/logout', { method: 'POST' }) } catch (_) {}
+    setUser(null)
+    notify.success('Đã đăng xuất.')
+  }
+
+  if (loading) return null
+
+  if (!user) return (
     <main className="admin-login">
       <div className="login-container">
         <div className="login-brand-panel">
@@ -74,7 +112,7 @@ export default function AdminApp() {
             </div>
             <div className="login-input-group">
               <label className="login-label"><Mail size={18} /><span>Email</span></label>
-              <input type="email" required placeholder="admin@xenang.local" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} />
+              <input type="email" required placeholder="admin@xenang.local" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} autoFocus />
             </div>
             <div className="login-input-group">
               <label className="login-label"><Settings size={18} /><span>Mật khẩu</span></label>
@@ -103,6 +141,8 @@ export default function AdminApp() {
           <hr />
           <a className={tab === 'blog' ? 'active' : ''} onClick={() => setTab('blog')}><FileText size={18} /> Blog</a>
           <hr />
+          <a className={tab === 'audit' ? 'active' : ''} onClick={() => setTab('audit')}><History size={18} /> Nhật ký</a>
+          <hr />
           <a className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}><Settings size={18} /> Cấu hình</a>
         </nav>
         <div className="sidebar-footer">
@@ -110,7 +150,7 @@ export default function AdminApp() {
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             {theme === 'dark' ? 'Sáng' : 'Tối'}
           </button>
-          <button className="logout-btn" onClick={logout}><LogOut size={16} /> Đăng xuất</button>
+          <button className="logout-btn" onClick={doLogout}><LogOut size={16} /> Đăng xuất</button>
         </div>
       </aside>
       <section className="admin-content">
@@ -120,6 +160,7 @@ export default function AdminApp() {
         {tab === 'services' && <AdminServices services={services} onRefresh={loadAdmin} />}
         {tab === 'leads' && <AdminLeads leads={leads} onRefresh={loadAdmin} />}
         {tab === 'blog' && <AdminBlog posts={blogPosts} onRefresh={loadAdmin} />}
+        {tab === 'audit' && <AdminAuditLog />}
         {tab === 'settings' && <AdminSettings settings={settings} onRefresh={loadAdmin} />}
       </section>
     </main>
