@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
 
 :root {
   --accent: #FBBF24;
@@ -8365,23 +8365,6 @@ a.service-card:hover h3 {
 .contact-map-fallback strong {
   color: var(--text-primary);
   font-size: 1rem;
-}
-
-.contact-map-wrap::after {
-  content: 'Vá»‹ trÃ­ showroom / kho dá»‹ch vá»¥';
-  position: absolute;
-  left: 20px;
-  bottom: 20px;
-  padding: 10px 16px;
-  border-radius: 14px;
-  background: rgba(15, 23, 42, .8);
-  color: var(--text-primary);
-  font-weight: 700;
-  font-size: .85rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, .12);
-  pointer-events: none;
 }
 
 /* â”€â”€ Body (heading + cards) â”€â”€ */

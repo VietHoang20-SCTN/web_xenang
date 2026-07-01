@@ -1,7 +1,0 @@
-node_modules
-dist
-server/uploads
-prisma/migrations
-.qoder
-package-lock.json
-*.log

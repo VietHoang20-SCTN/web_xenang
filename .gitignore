@@ -3,6 +3,9 @@ dist/
 .env
 .env.*
 !.env.example
+client/node_modules/
+client/dist/
+server/node_modules/
 server/uploads/*
 !server/uploads/.gitkeep
 .DS_Store
@@ -18,3 +21,4 @@ pnpm-debug.log*
 screenshot*.png
 
 temp_node_process.txt
+.claude/

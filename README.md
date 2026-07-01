@@ -39,7 +39,7 @@ ADMIN_PASSWORD="Admin@123456"
 
 ## Cài đặt database
 
-Sau khi PostgreSQL đã có database `xenang`, chạy:
+Sau khi MySQL/MariaDB đã có database `xenang`, chạy:
 
 ```bash
 npm install
@@ -81,7 +81,7 @@ server/routes/public.js      Public API cho website
 server/routes/auth.js        Đăng nhập admin
 server/routes/admin.js       Admin CRUD API
 server/middleware/auth.js    Middleware JWT
-prisma/schema.prisma         Database schema PostgreSQL
+prisma/schema.prisma         Database schema MySQL
 prisma/seed.js               Seed dữ liệu mẫu và admin
 src/api.js                   API client frontend
 src/main.jsx                 Website public và admin UI

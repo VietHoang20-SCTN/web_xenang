@@ -7,7 +7,7 @@ Hệ thống này là website giới thiệu, bán và cho thuê xe nâng cho do
 - **Website public**: hiển thị trang chủ, danh mục sản phẩm, dịch vụ, form nhận báo giá, thông tin liên hệ và bản đồ.
 - **Admin CMS**: quản trị sản phẩm, danh mục, dịch vụ, lead khách hàng, cấu hình website và upload ảnh sản phẩm.
 
-Dữ liệu chính được lưu trong PostgreSQL thông qua Prisma ORM. Frontend gọi API từ backend Express để lấy dữ liệu động.
+Dữ liệu chính được lưu trong MariaDB/MySQL thông qua Prisma ORM. Frontend gọi API từ backend Express để lấy dữ liệu động.
 
 ---
 
@@ -63,14 +63,14 @@ server/uploads/              Nơi lưu ảnh upload sau khi nén WebP
 Hệ thống sử dụng:
 
 ```text
-PostgreSQL
+MariaDB/MySQL
 ```
 
 Kết nối database được cấu hình trong Prisma:
 
 ```prisma
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 ```
@@ -244,7 +244,7 @@ server/uploads
 
 - **Node.js** phiên bản khuyến nghị: Node 18+ hoặc Node 20+.
 - **npm** đi kèm Node.js.
-- **PostgreSQL**.
+- **MariaDB/MySQL**.
 - Git nếu cần clone/pull code.
 
 ### Cài dependencies
@@ -255,7 +255,7 @@ Tại thư mục project:
 npm install
 ```
 
-### Tạo database PostgreSQL
+### Tạo database MySQL
 
 Tạo database tên ví dụ:
 
@@ -263,13 +263,13 @@ Tạo database tên ví dụ:
 xenang
 ```
 
-Local hiện tại đang dùng PostgreSQL port `5433`:
+Local có thể dùng MySQL port `3306`:
 
 ```text
-postgresql://postgres:postgres@localhost:5433/xenang?schema=public
+mysql://postgres:postgres@localhost:3306/xenang
 ```
 
-Nếu máy khác dùng port mặc định PostgreSQL thì thường là `5432`.
+Nếu máy khác dùng port mặc định MySQL thì thường là `3306`.
 
 ---
 
@@ -278,7 +278,7 @@ Nếu máy khác dùng port mặc định PostgreSQL thì thường là `5432`.
 Tạo file `.env` ở root project:
 
 ```text
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/xenang?schema=public"
+DATABASE_URL="mysql://postgres:postgres@localhost:3306/xenang"
 JWT_SECRET="change-this-secret-before-production"
 PORT=4000
 VITE_API_URL="http://localhost:4000/api"
@@ -290,18 +290,18 @@ ADMIN_PASSWORD="Admin@123456"
 
 ### `DATABASE_URL`
 
-Chuỗi kết nối PostgreSQL cho Prisma.
+Chuỗi kết nối MySQL cho Prisma.
 
 Ví dụ local:
 
 ```text
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/xenang?schema=public"
+DATABASE_URL="mysql://postgres:postgres@localhost:3306/xenang"
 ```
 
 Ví dụ production:
 
 ```text
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+DATABASE_URL="mysql://USER:PASSWORD@HOST:3306/DATABASE"
 ```
 
 ### `JWT_SECRET`
@@ -348,19 +348,21 @@ Sau khi deploy production nên đổi mật khẩu mặc định.
 
 ## 7. Khởi tạo Prisma và dữ liệu mẫu
 
-Sau khi đã cấu hình `.env` và database PostgreSQL, chạy:
+Sau khi đã cấu hình `.env` và database MySQL, chạy:
 
 ```bash
 npm run prisma:generate
-npm run prisma:migrate
+npm run prisma:dbpush
 npm run prisma:seed
 ```
 
 Ý nghĩa:
 
 - `prisma:generate`: tạo Prisma Client.
-- `prisma:migrate`: tạo bảng trong PostgreSQL theo `schema.prisma`.
+- `prisma:dbpush`: tạo bảng trong MySQL theo `schema.prisma`.
 - `prisma:seed`: tạo dữ liệu mẫu và tài khoản admin.
+
+> **Lưu ý:** Với MySQL, dùng `npx prisma db push` thay `npm run prisma:migrate` cho lần đầu tạo database mới. Nếu cần migration, chạy `npx prisma migrate dev --name init` sau khi xoá folder `migrations/`.
 
 ---
 
@@ -459,7 +461,7 @@ ADMIN_PASSWORD
 Ví dụ production:
 
 ```text
-DATABASE_URL="postgresql://user:password@db-host:5432/xenang?schema=public"
+DATABASE_URL="mysql://user:password@db-host:3306/xenang"
 JWT_SECRET="mot-chuoi-bi-mat-rat-dai-va-kho-doan"
 PORT=4000
 VITE_API_URL="https://api.tenmiencuaban.com/api"
@@ -543,16 +545,16 @@ Ví dụ:
 
 - Frontend: Vercel/Netlify.
 - Backend: Render/Railway/VPS.
-- Database: PostgreSQL cloud như Render PostgreSQL, Railway PostgreSQL, Supabase, Neon hoặc VPS PostgreSQL.
+- Database: MySQL cloud (Render MySQL, Railway MySQL, Aiven, hoặc VPS MySQL).
 
-#### Bước 1: Tạo PostgreSQL online
+#### Bước 1: Tạo MySQL online
 
-Tạo database PostgreSQL trên nhà cung cấp cloud.
+Tạo database MySQL trên nhà cung cấp cloud.
 
 Lấy connection string dạng:
 
 ```text
-postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public
+mysql://USER:PASSWORD@HOST:3306/DATABASE
 ```
 
 Đưa chuỗi này vào biến môi trường backend:
@@ -568,7 +570,7 @@ Backend cần chạy command:
 ```bash
 npm install
 npm run prisma:generate
-npm run prisma:migrate
+npx prisma db push
 npm run prisma:seed
 npm run server
 ```
@@ -601,12 +603,12 @@ Nếu trả về:
 
 là backend chạy ổn.
 
-#### Bước 3: Chạy migrate database production
+#### Bước 3: Tạo bảng database production
 
 Trên server hoặc deploy console chạy:
 
 ```bash
-npm run prisma:migrate
+npx prisma db push
 ```
 
 Sau đó seed admin lần đầu:
@@ -648,7 +650,7 @@ https://tenmiencuaban.com/admin
 
 ### Phương án B: Deploy frontend và backend cùng VPS
 
-Ví dụ dùng VPS Ubuntu + Nginx + PM2 + PostgreSQL.
+Ví dụ dùng VPS Ubuntu + Nginx + PM2 + MySQL.
 
 #### Bước 1: Cài môi trường VPS
 
@@ -657,7 +659,7 @@ Cần cài:
 ```bash
 node
 npm
-postgresql
+mysql-server
 nginx
 pm2
 ```
@@ -673,7 +675,7 @@ npm install
 #### Bước 3: Tạo `.env` production
 
 ```text
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/xenang?schema=public"
+DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/xenang"
 JWT_SECRET="chuoi-bi-mat-production"
 PORT=4000
 VITE_API_URL="https://tenmiencuaban.com/api"
@@ -685,7 +687,7 @@ ADMIN_PASSWORD="mat-khau-manh"
 
 ```bash
 npm run prisma:generate
-npm run prisma:migrate
+npx prisma db push
 npm run prisma:seed
 ```
 
@@ -752,7 +754,7 @@ Sau đó cài SSL bằng Certbot/Let's Encrypt.
 
 ### Database
 
-- Backup PostgreSQL định kỳ.
+- Backup MySQL định kỳ.
 - Không chạy lại seed nếu không cần sau khi website đã có dữ liệu thật.
 - Khi thay đổi schema, cần chạy migration cẩn thận.
 
@@ -824,9 +826,9 @@ npm run server
 
 ### Database
 
-- Tạo PostgreSQL online.
+- Tạo MySQL online.
 - Cập nhật `DATABASE_URL`.
-- Chạy migrate.
+- Chạy `npx prisma db push`.
 - Chạy seed lần đầu.
 
 ### Backend
@@ -866,7 +868,6 @@ npm run server
   "build": "vite build",
   "preview": "vite preview --host 0.0.0.0",
   "prisma:generate": "prisma generate",
-  "prisma:migrate": "prisma migrate dev",
   "prisma:seed": "prisma db seed"
 }
 ```
@@ -916,10 +917,10 @@ src/data.js
 
 - **Frontend**: React + Vite + CSS thuần.
 - **Backend**: Node.js + Express.
-- **Database**: PostgreSQL.
+- **Database**: MySQL (MariaDB).
 - **ORM**: Prisma.
 - **Auth admin**: JWT + bcryptjs.
-- **Upload ảnh**: multer + sharp, lưu local tại `server/uploads`.
+- **Upload ảnh**: multer + sharp, lưu local tại `server/uploads`, cloud backup qua Cloudinary.
 - **Deploy cần sửa chính**: `.env`, đặc biệt `DATABASE_URL`, `JWT_SECRET`, `VITE_API_URL`, admin account.
 - **Build frontend**: `npm run build`.
 - **Run backend**: `npm run server`.
