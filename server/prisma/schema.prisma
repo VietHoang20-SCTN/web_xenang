@@ -33,10 +33,12 @@ model Category {
   id          String    @id @default(cuid())
   name        String
   slug        String    @unique
-  description String?
+  description String?   @db.Text
   sortOrder   Int       @default(0)
   isActive    Boolean   @default(true)
+
   products    Product[]
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -45,93 +47,129 @@ model Product {
   id          String    @id @default(cuid())
   name        String
   slug        String    @unique
+
   categoryId  String
   category    Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
   tag         String?
   image       String?
+
   gallery     Json      @default("[]")
-  summary     String?
-  description String?
-  content     String?
+
+  summary     String?   @db.Text
+  description String?   @db.LongText
+  content     String?   @db.LongText
+
   specs       Json      @default("[]")
+
   isFeatured  Boolean   @default(false)
   isActive    Boolean   @default(true)
+
   leads       Lead[]
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
 
 model Service {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  slug        String   @unique
-  description String?
-  content     String?
+  slug        String    @unique
+
+  description String?   @db.Text
+  content     String?   @db.LongText
+
   icon        String?
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model BlogPost {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  slug        String   @unique
-  excerpt     String?
-  content     String?
+  slug        String    @unique
+
+  excerpt     String?   @db.Text
+  content     String?   @db.LongText
+
   coverImage  String?
-  tags        Json     @default("[]")
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  tags        Json      @default("[]")
+
+  isPublished Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Lead {
-  id        String     @id @default(cuid())
+  id        String      @id @default(cuid())
+
   name      String
   phone     String
   company   String?
-  need      String
+
+  need      String      @db.Text
+
   productId String?
-  product   Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
-  status    LeadStatus @default(NEW)
-  note      String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  product   Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  status    LeadStatus  @default(NEW)
+
+  note      String?     @db.LongText
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model SiteSetting {
-  id           String   @id @default(cuid())
-  brand        String
-  hotline      String
-  zalo         String
-  email        String?
-  address      String?
-  mapEmbed     String?   @db.Text
-  logo         String?
-  logoDark     String?
-  heroTitle    String?
-  heroSubtitle String?
-  aboutTitle    String?
-  aboutBody     String?
-  aboutImage    String?
-  aboutImages   Json      @default("[]")
-  aboutAudience Json      @default("{\"title\":\"Khách hàng mục tiêu\",\"intro\":\"\",\"bullets\":[]}")
-  heroMetrics   Json      @default("[]")
-  trustBadges   Json      @default("[]")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+
+  brand          String
+  hotline        String
+  zalo           String
+
+  email          String?
+  address        String?
+
+  mapEmbed       String?  @db.LongText
+
+  logo           String?
+  logoDark       String?
+
+  heroTitle      String?
+  heroSubtitle   String?  @db.Text
+
+  aboutTitle     String?
+  aboutBody      String?  @db.LongText
+  aboutImage     String?
+
+  aboutImages    Json     @default("[]")
+  aboutAudience  Json     @default("{\"title\":\"Khách hàng mục tiêu\",\"intro\":\"\",\"bullets\":[]}")
+  heroMetrics    Json     @default("[]")
+  trustBadges    Json     @default("[]")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  userEmail String
-  action    String   // CREATE | UPDATE | DELETE | LOGIN | LOGOUT
-  entity    String   // Product | Category | Service | BlogPost | Lead | SiteSetting
-  entityId  String?
-  details   String?
-  ip        String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+
+  userId      String
+  userEmail   String
+
+  action      String
+  entity      String
+
+  entityId    String?
+
+  details     String?  @db.LongText
+  ip          String?
+
+  createdAt   DateTime @default(now())
 }
