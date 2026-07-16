@@ -1,19 +1,38 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Calendar, Clock, Share2, Tag, Zap } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Calendar, Clock, List, ChevronDown, Share2, Tag, Zap } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import PublicNav from './PublicNav'
+
+function parseHeadings(html) {
+  const re = /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi
+  const headings = []
+  let m
+  while ((m = re.exec(html)) !== null) {
+    const text = m[3].replace(/<[^>]+>/g, '').trim()
+    if (text) headings.push({ level: +m[1], text, slug: 'h-' + headings.length })
+  }
+  return headings
+}
+
+function injectIds(html) {
+  let i = 0
+  return html.replace(/<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi, (_, l, a, c) => `<h${l}${a} id="h-${i++}">${c}</h${l}>`)
+}
 
 export default function BlogPost() {
   const { slug } = useParams()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [siteSettings, setSiteSettings] = useState({ brand: 'Xe Nâng Bắc Ninh' })
+  const [tocOpen, setTocOpen] = useState(false)
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
         const p = await api(`/public/blog/${slug}`)
+        p._headings = parseHeadings(p.content || '')
+        p._contentHtml = injectIds(p.content || '')
         setPost(p)
         document.title = `${p.title} | Blog Xe Nâng`
       } catch {
@@ -22,7 +41,9 @@ export default function BlogPost() {
         setLoading(false)
       }
     })()
-    api('/public/site-settings').then(s => setSiteSettings(s || {})).catch(() => {})
+    api('/public/site-settings')
+      .then((s) => setSiteSettings(s || {}))
+      .catch(() => {})
   }, [slug])
 
   const formatDate = (d) => new Date(d).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -41,7 +62,9 @@ export default function BlogPost() {
       <div className="blog-post-loading">
         <h2>Không tìm thấy bài viết</h2>
         <p>Bài viết này có thể đã bị xóa hoặc đường dẫn không chính xác.</p>
-        <Link to="/blog" className="primary-btn">← Xem tất cả bài viết</Link>
+        <Link to="/blog" className="primary-btn">
+          ← Xem tất cả bài viết
+        </Link>
       </div>
     )
   }
@@ -50,7 +73,9 @@ export default function BlogPost() {
     <div className="blog-post-page-wrapper">
       {/* ── Ambient ── */}
       <div className="particles" aria-hidden="true">
-        {Array.from({ length: 6 }).map((_, i) => <span key={i} className={`orb orb-${i + 1}`} />)}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span key={i} className={`orb orb-${i + 1}`} />
+        ))}
       </div>
 
       {/* ── Header ── */}
@@ -72,15 +97,21 @@ export default function BlogPost() {
             {(post.tags || []).length > 0 && (
               <div className="blog-article-tags-top">
                 {(post.tags || []).map((t, i) => (
-                  <span key={i} className="blog-article-tag-top">{t}</span>
+                  <span key={i} className="blog-article-tag-top">
+                    {t}
+                  </span>
                 ))}
               </div>
             )}
             <h1>{post.title}</h1>
             <div className="blog-article-meta">
-              <span><Calendar size={15} /> {formatDate(post.createdAt)}</span>
+              <span>
+                <Calendar size={15} /> {formatDate(post.createdAt)}
+              </span>
               <span className="blog-article-meta-sep">·</span>
-              <span><Clock size={15} /> 7 phút đọc</span>
+              <span>
+                <Clock size={15} /> 7 phút đọc
+              </span>
             </div>
           </div>
         </div>
@@ -104,14 +135,41 @@ export default function BlogPost() {
           )}
 
           {/* Content */}
-          <div className="blog-article-body" dangerouslySetInnerHTML={{ __html: post.content || '' }} />
+          {(post._headings || []).length > 1 && (
+            <div className="blog-article-toc">
+              <button className="blog-article-toc-toggle" onClick={() => setTocOpen((v) => !v)}>
+                <List size={16} />
+                <span>Mục lục bài viết</span>
+                <ChevronDown
+                  size={14}
+                  className={`blog-article-toc-chevron${tocOpen ? ' blog-article-toc-chevron--open' : ''}`}
+                />
+              </button>
+              <div className={`blog-article-toc-body${tocOpen ? ' blog-article-toc-body--open' : ''}`}>
+                <ul>
+                  {post._headings.map((h, i) => (
+                    <li key={i} className={`blog-article-toc-item blog-article-toc-item--h${h.level}`}>
+                      <a href={`#${h.slug}`} onClick={() => setTocOpen(false)}>
+                        {h.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="blog-article-body" dangerouslySetInnerHTML={{ __html: post._contentHtml || '' }} />
 
           {/* Tags Footer */}
           {(post.tags || []).length > 0 && (
             <div className="blog-article-tags-footer">
               <Tag size={14} />
               {(post.tags || []).map((t, i) => (
-                <span key={i} className="blog-article-tag-footer">{t}</span>
+                <span key={i} className="blog-article-tag-footer">
+                  {t}
+                </span>
               ))}
             </div>
           )}
@@ -119,7 +177,11 @@ export default function BlogPost() {
           {/* Share */}
           <div className="blog-article-share">
             <span>Chia sẻ bài viết:</span>
-            <button className="blog-share-btn" onClick={() => navigator.clipboard?.writeText(window.location.href)} title="Sao chép link">
+            <button
+              className="blog-share-btn"
+              onClick={() => navigator.clipboard?.writeText(window.location.href)}
+              title="Sao chép link"
+            >
               <Share2 size={16} /> Sao chép link
             </button>
           </div>
@@ -140,7 +202,12 @@ export default function BlogPost() {
             <Link to="/#quote" className="primary-btn blog-sidebar-cta-btn">
               Nhận báo giá <ArrowRight size={16} />
             </Link>
-            <a className="zalo-icon-btn blog-sidebar-zalo" href="https://zalo.me/0900000000" target="_blank" rel="noopener noreferrer">
+            <a
+              className="zalo-icon-btn blog-sidebar-zalo"
+              href="https://zalo.me/0900000000"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <span>Chat Zalo</span>
             </a>
           </div>

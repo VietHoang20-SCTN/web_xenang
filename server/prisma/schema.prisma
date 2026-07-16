@@ -108,15 +108,18 @@ model SiteSetting {
   zalo         String
   email        String?
   address      String?
-  mapEmbed     String?
+  mapEmbed     String?   @db.Text
   logo         String?
   logoDark     String?
   heroTitle    String?
   heroSubtitle String?
-  aboutTitle   String?
-  aboutBody    String?
-  aboutImage   String?
-  aboutImages  Json      @default("[]")
+  aboutTitle    String?
+  aboutBody     String?
+  aboutImage    String?
+  aboutImages   Json      @default("[]")
+  aboutAudience Json      @default("{\"title\":\"Khách hàng mục tiêu\",\"intro\":\"\",\"bullets\":[]}")
+  heroMetrics   Json      @default("[]")
+  trustBadges   Json      @default("[]")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

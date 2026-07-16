@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowRight, ChevronLeft, ChevronRight, Phone, Search, X } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Clock, Gauge, Weight, Zap, Ruler, Battery, Shield, Box, Truck, Package, Settings, Search, X } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { notify } from '../toast'
 import { categories as fallbackCategories, products as fallbackProducts } from '../data'

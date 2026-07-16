@@ -62,6 +62,17 @@ const leadUpdateSchema = z.object({
   note: z.string().max(5000).optional().nullable(),
 })
 
+// --- Admin: Blog ---
+const blogSchema = z.object({
+  title: z.string().min(1, 'Tiêu đề là bắt buộc.').max(300),
+  slug: z.string().max(350).optional().default(''),
+  excerpt: z.string().max(1000).optional().nullable(),
+  content: z.string().min(1, 'Nội dung là bắt buộc.').max(200000),
+  coverImage: z.string().max(500).optional().nullable(),
+  tags: z.array(z.string().min(1).max(50)).max(20).default([]),
+  isPublished: z.boolean().default(false),
+})
+
 // --- Admin: Site settings ---
 const siteSettingsSchema = z.object({
   brand: z.string().min(1).max(200),
@@ -78,6 +89,20 @@ const siteSettingsSchema = z.object({
   aboutBody: z.string().max(50000).optional().nullable(),
   aboutImage: z.string().max(500).optional().nullable(),
   aboutImages: z.array(z.string().max(500)).max(20).default([]),
+  aboutAudience: z.object({
+    title: z.string().max(200).optional().nullable().default(''),
+    intro: z.string().max(2000).optional().nullable().default(''),
+    bullets: z.array(z.string().max(500)).max(20).default([]),
+  }).default({ title: '', intro: '', bullets: [] }),
+  heroMetrics: z.array(z.object({
+    number: z.string().max(50).optional().nullable(),
+    label: z.string().max(200).optional().nullable(),
+  })).max(10).default([]),
+  trustBadges: z.array(z.object({
+    icon: z.string().max(50).optional().nullable(),
+    title: z.string().max(200).optional().nullable(),
+    desc: z.string().max(500).optional().nullable(),
+  })).max(10).default([]),
 })
 
 // --- Auth: Login ---
@@ -106,6 +131,7 @@ module.exports = {
   productSchema,
   leadUpdateSchema,
   siteSettingsSchema,
+  blogSchema,
   loginSchema,
   validate,
 }

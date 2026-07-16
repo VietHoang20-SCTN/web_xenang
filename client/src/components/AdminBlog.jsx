@@ -207,10 +207,10 @@ export default function AdminBlog({ posts, onRefresh }) {
         </button>
       </div>
 
-      {/* ── Editor Form ── */}
+      {/* ── Editor Modal ── */}
       {showForm && (
-        <div className="blog-editor-overlay">
-          <div className="blog-editor-card">
+        <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) reset() }}>
+          <div className="blog-editor-card" style={{ maxWidth: 'min(1200px, 96vw)', maxHeight: '96vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', width: '100%' }}>
             {/* Card Header */}
             <div className="blog-editor-header">
               <div className="blog-editor-header-left">

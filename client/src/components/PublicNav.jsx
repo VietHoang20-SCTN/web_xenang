@@ -1,6 +1,6 @@
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Phone, Zap } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Menu, X, Phone, Zap } from 'lucide-react'
 import { useTheme } from '../hooks'
 import { assetUrl } from '../api'
 
@@ -11,6 +11,12 @@ import { assetUrl } from '../api'
 export default function PublicNav({ siteSettings = {}, currentPage }) {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location])
 
   const goToSection = (e, sectionId) => {
     e.preventDefault()
@@ -26,26 +32,123 @@ export default function PublicNav({ siteSettings = {}, currentPage }) {
   }
 
   return (
-    <header className="site-header blog-site-header">
-      <Link className="brand" to="/">
-        {(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))
-          ? <img className="brand-logo" src={assetUrl(theme === 'dark' ? (siteSettings.logoDark || siteSettings.logo) : (siteSettings.logo || siteSettings.logoDark))} alt={siteSettings.brand} />
-          : <Zap size={28} />
-        }
-      </Link>
-      <nav className="desktop-nav">
-        <a href="#about" className={currentPage === 'about' ? 'active' : ''} onClick={(e) => goToSection(e, 'about')}>Giới thiệu</a>
-        <a href="#products" className={currentPage === 'products' ? 'active' : ''} onClick={(e) => goToSection(e, 'products')}>Sản phẩm</a>
-        <a href="#services" className={currentPage === 'services' ? 'active' : ''} onClick={(e) => goToSection(e, 'services')}>Dịch vụ</a>
-        <a href="#contact" className={currentPage === 'contact' ? 'active' : ''} onClick={(e) => goToSection(e, 'contact')}>Liên hệ</a>
-        <Link to="/blog" className={currentPage === 'blog' ? 'active' : ''}>Blog</Link>
-      </nav>
-      <div className="header-actions">
-        <button className="theme-toggle" onClick={toggleTheme} aria-label="Đổi theme">
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-        <a className="phone-link" href="tel:0900000000"><Phone size={18} />0900 000 000</a>
-      </div>
-    </header>
+    <>
+      <header className="site-header blog-site-header">
+        <Link className="brand" to="/">
+          {(
+            theme === 'dark' ? siteSettings.logoDark || siteSettings.logo : siteSettings.logo || siteSettings.logoDark
+          ) ? (
+            <img
+              className="brand-logo"
+              src={assetUrl(
+                theme === 'dark'
+                  ? siteSettings.logoDark || siteSettings.logo
+                  : siteSettings.logo || siteSettings.logoDark
+              )}
+              alt={siteSettings.brand}
+            />
+          ) : (
+            <Zap size={28} />
+          )}
+        </Link>
+        <nav className="desktop-nav">
+          <Link to="/" className={currentPage === 'home' ? 'active' : ''}>
+            Trang chủ
+          </Link>
+          <a href="#about" className={currentPage === 'about' ? 'active' : ''} onClick={(e) => goToSection(e, 'about')}>
+            Giới thiệu
+          </a>
+          <a
+            href="#products"
+            className={currentPage === 'products' ? 'active' : ''}
+            onClick={(e) => goToSection(e, 'products')}
+          >
+            Sản phẩm
+          </a>
+          <a
+            href="#services"
+            className={currentPage === 'services' ? 'active' : ''}
+            onClick={(e) => goToSection(e, 'services')}
+          >
+            Dịch vụ
+          </a>
+          <a
+            href="#contact"
+            className={currentPage === 'contact' ? 'active' : ''}
+            onClick={(e) => goToSection(e, 'contact')}
+          >
+            Liên hệ
+          </a>
+          <Link to="/blog" className={currentPage === 'blog' ? 'active' : ''}>
+            Blog
+          </Link>
+        </nav>
+        <div className="header-actions">
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Đổi theme">
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Menu">
+            <Menu size={20} />
+          </button>
+        </div>
+      </header>
+
+      {menuOpen && (
+        <div className="mobile-panel">
+          <button className="close-btn" onClick={() => setMenuOpen(false)}>
+            <X />
+          </button>
+          <Link to="/" onClick={() => setMenuOpen(false)}>
+            Trang chủ
+          </Link>
+          <a
+            onClick={(e) => {
+              e.preventDefault()
+              setMenuOpen(false)
+              goToSection(e, 'about')
+            }}
+            href="#about"
+          >
+            Giới thiệu
+          </a>
+          <a
+            onClick={(e) => {
+              e.preventDefault()
+              setMenuOpen(false)
+              goToSection(e, 'products')
+            }}
+            href="#products"
+          >
+            Sản phẩm
+          </a>
+          <a
+            onClick={(e) => {
+              e.preventDefault()
+              setMenuOpen(false)
+              goToSection(e, 'services')
+            }}
+            href="#services"
+          >
+            Dịch vụ
+          </a>
+          <a
+            onClick={(e) => {
+              e.preventDefault()
+              setMenuOpen(false)
+              goToSection(e, 'contact')
+            }}
+            href="#contact"
+          >
+            Liên hệ
+          </a>
+          <Link to="/blog" onClick={() => setMenuOpen(false)}>
+            Blog
+          </Link>
+          <a className="mobile-drawer-phone" href={`tel:${siteSettings.hotline || '0900000000'}`}>
+            <Phone size={18} /> {siteSettings.hotline || '0900 000 000'}
+          </a>
+        </div>
+      )}
+    </>
   )
 }
