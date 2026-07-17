@@ -149,7 +149,7 @@ model SiteSetting {
   aboutImage     String?
 
   aboutImages    Json     @default("[]")
-  aboutAudience  Json     @default("{\"title\":\"Khách hàng mục tiêu\",\"intro\":\"\",\"bullets\":[]}")
+  aboutAudience  Json     @default("{\"title\":\"\",\"intro\":\"\",\"bullets\":[]}")
   heroMetrics    Json     @default("[]")
   trustBadges    Json     @default("[]")
 

@@ -206,15 +206,25 @@ router.put('/site-settings', validate(siteSettingsSchema), auditMiddleware('Site
   try {
     const current = await prisma.siteSetting.findFirst({ orderBy: { createdAt: 'asc' } })
     const { brand, hotline, zalo, email, address, mapEmbed, logo, logoDark, heroTitle, heroSubtitle, aboutTitle, aboutBody, aboutImage, aboutImages, aboutAudience, heroMetrics, trustBadges } = req.body
-    const data = { brand, hotline, zalo, email, address, mapEmbed: sanitizeMapEmbed(mapEmbed), logo, logoDark, heroTitle, heroSubtitle, aboutTitle, aboutBody: sanitizeRichText(aboutBody), aboutImage, aboutImages, aboutAudience, heroMetrics, trustBadges }
-    console.log("typeof aboutAudience:", typeof aboutAudience);
-console.log("aboutAudience:", aboutAudience);
-
-console.log("typeof heroMetrics:", typeof heroMetrics);
-console.log(heroMetrics);
-
-console.log("typeof trustBadges:", typeof trustBadges);
-console.log(trustBadges);
+    const data = {
+      brand,
+      hotline,
+      zalo,
+      email,
+      address,
+      mapEmbed: sanitizeMapEmbed(mapEmbed),
+      logo,
+      logoDark,
+      heroTitle,
+      heroSubtitle,
+      aboutTitle,
+      aboutBody: sanitizeRichText(aboutBody),
+      aboutImage,
+      aboutImages,
+      aboutAudience: aboutAudience ?? { title: '', intro: '', bullets: [] },
+      heroMetrics: Array.isArray(heroMetrics) ? heroMetrics : [],
+      trustBadges: Array.isArray(trustBadges) ? trustBadges : [],
+    }
     const settings = current ? await prisma.siteSetting.update({ where: { id: current.id }, data }) : await prisma.siteSetting.create({ data })
     res.json(settings)
   } catch (error) {
