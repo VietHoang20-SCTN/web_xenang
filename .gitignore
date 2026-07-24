@@ -22,3 +22,4 @@ screenshot*.png
 
 temp_node_process.txt
 .claude/
+.codegraph/
