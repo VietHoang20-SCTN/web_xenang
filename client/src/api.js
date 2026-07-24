@@ -12,11 +12,11 @@ export function api(path, options = {}) {
   const isFormData = options.body instanceof FormData
   return fetch(`${API_URL}${path}`, {
     ...options,
-    credentials: 'include',          // ← sends HttpOnly cookie
+    credentials: 'include', // ← sends HttpOnly cookie
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(options.headers || {})
-    }
+      ...(options.headers || {}),
+    },
   }).then(async (response) => {
     if (response.status === 204) return null
     const data = await response.json().catch(() => null)
@@ -26,7 +26,7 @@ export function api(path, options = {}) {
 }
 
 export function assetUrl(path) {
-  if (!path) return ''
+  if (!path) return null
   if (path.startsWith('http')) return path
   return `${API_ORIGIN}${path}`
 }

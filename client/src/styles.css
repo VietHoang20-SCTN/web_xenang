@@ -8037,20 +8037,33 @@ a.service-card:hover h3 {
   color: var(--accent);
 }
 
+.blog-toolbar-group button.active,
+.blog-toolbar-upload-btn.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+}
+
 .blog-rich-content {
   min-height: 300px;
-  padding: 20px;
   color: var(--text-primary);
   font-size: .95rem;
   line-height: 1.85;
-  outline: none;
   overflow-y: auto;
 }
 
-.blog-rich-content:empty::before {
+.blog-rich-content .ProseMirror {
+  min-height: 300px;
+  padding: 20px;
+  outline: none;
+}
+
+.blog-rich-content .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: var(--text-muted);
   pointer-events: none;
+  float: left;
+  height: 0;
 }
 
 .blog-rich-content h2 {
