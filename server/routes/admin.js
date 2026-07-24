@@ -225,6 +225,7 @@ router.put('/site-settings', validate(siteSettingsSchema), auditMiddleware('Site
       heroMetrics: Array.isArray(heroMetrics) ? heroMetrics : [],
       trustBadges: Array.isArray(trustBadges) ? trustBadges : [],
     }
+    
     const settings = current ? await prisma.siteSetting.update({ where: { id: current.id }, data }) : await prisma.siteSetting.create({ data })
     res.json(settings)
   } catch (error) {

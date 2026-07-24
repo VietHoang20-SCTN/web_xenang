@@ -2,7 +2,8 @@ const express = require('express')
 const multer = require('multer')
 const { requireAuth } = require('../middleware/auth')
 const { uploadLogo, uploadProductImage, uploadAboutImage } = require('../cloudinary')
-const fileType = require('file-type')
+// const fileType = require('file-type')
+const { fileTypeFromBuffer } = require('file-type')
 
 const router = express.Router()
 
@@ -22,7 +23,8 @@ const upload = multer({
 async function verifyMagicBytes(req, res, next) {
   if (!req.file?.buffer) return next()
   try {
-    const detected = await fileType.fromBuffer(req.file.buffer)
+    // const detected = await fileType.fromBuffer(req.file.buffer)
+    const detected = await fileTypeFromBuffer(req.file.buffer)
     if (!detected || !ALLOWED_MIME.has(detected.mime)) {
       return res.status(400).json({ message: 'File không hợp lệ. Chỉ chấp nhận jpg, png, webp, gif.' })
     }
