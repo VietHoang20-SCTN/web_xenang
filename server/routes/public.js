@@ -37,7 +37,9 @@ router.get('/products', async (req, res, next) => {
   try {
     const where = { isActive: true }
     if (req.query.category) where.category = { slug: req.query.category }
-    const products = await prisma.product.findMany({ where, include: { category: true }, orderBy: { createdAt: 'desc' } })
+    const requestedLimit = Number(req.query.limit)
+    const take = Number.isFinite(requestedLimit) && requestedLimit > 0 ? Math.min(100, Math.floor(requestedLimit)) : undefined
+    const products = await prisma.product.findMany({ where, include: { category: true }, orderBy: { createdAt: 'desc' }, ...(take ? { take } : {}) })
     res.json(products)
   } catch (error) {
     next(error)

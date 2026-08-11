@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { ArrowRight, Phone } from 'lucide-react'
 import { api } from '../api'
 import { notify } from '../toast'
-import { services as fallbackServices } from '../data'
+
 import PublicNav from './PublicNav'
 
 export default function ServiceDetail() {
@@ -21,14 +21,7 @@ export default function ServiceDetail() {
         setService(svc)
         document.title = `${svc.title} | Xe Nâng Bắc Ninh`
       } catch {
-        const fb = fallbackServices.find(s => {
-          const fbSlug = s.title.toLowerCase().replace(/\s+/g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-          return fbSlug === slug
-        })
-        if (fb) {
-          setService(fb)
-          document.title = `${fb.title} | Xe Nâng Bắc Ninh`
-        }
+        setService(null)
       } finally {
         setLoading(false)
       }

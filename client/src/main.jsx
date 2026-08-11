@@ -7,14 +7,24 @@ import ProductDetail from './components/ProductDetail'
 import ServiceDetail from './components/ServiceDetail'
 import BlogList from './components/BlogList'
 import BlogPost from './components/BlogPost'
+import NotFound from './components/NotFound'
+import ScrollManager from './components/ScrollManager'
 import './styles.css'
+import './section-visibility.css'
 
 // Admin panel is lazy-loaded — visitors never download admin code.
 const AdminApp = React.lazy(() => import('./components/AdminApp'))
 
 function AdminLoader() {
   return (
-    <Suspense fallback={<div className="admin-loading"><div className="spinner" /><p>Đang tải quản trị...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="admin-loading">
+          <div className="spinner" />
+          <p>Đang tải quản trị...</p>
+        </div>
+      }
+    >
       <AdminApp />
     </Suspense>
   )
@@ -31,6 +41,7 @@ createRoot(document.getElementById('root')).render(
         className: 'toast-base',
       }}
     />
+    <ScrollManager />
     <Routes>
       <Route path="/" element={<PublicSite />} />
       <Route path="/san-pham/:slug" element={<ProductDetail />} />
@@ -38,6 +49,7 @@ createRoot(document.getElementById('root')).render(
       <Route path="/blog" element={<BlogList />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/admin/*" element={<AdminLoader />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
 )

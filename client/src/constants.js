@@ -2,7 +2,7 @@ import { Factory, PackageCheck, Settings, ShieldCheck, Truck, Zap, Wrench, Cog, 
 
 export const emptyProduct = { id: null, name: '', slug: '', categoryId: '', tag: '', image: '', gallery: [], summary: '', description: '', content: '', specs: [''], isActive: true }
 export const emptyCategory = { id: null, name: '', slug: '', description: '', sortOrder: 0, isActive: true }
-export const emptyService = { id: null, title: '', slug: '', description: '', content: '', icon: 'Settings', sortOrder: 0, isActive: true }
+export const emptyService = { id: null, title: '', slug: '', description: '', content: '', image: '', icon: 'Settings', sortOrder: 0, isActive: true }
 export const leadStatuses = { NEW: 'Mới', CONTACTED: 'Đã liên hệ', QUOTED: 'Đã báo giá', DONE: 'Hoàn tất', CANCELLED: 'Hủy' }
 export const serviceIcons = { Truck, PackageCheck, Settings, Factory, ShieldCheck, Zap, Wrench, Cog, Gauge, BatteryFull, HardDrive, BarChart3, ClipboardCheck, Users, Recycle, Timer }
 export const serviceIconLabels = {

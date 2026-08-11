@@ -95,7 +95,8 @@ router.get('/products', async (req, res, next) => {
 router.post('/products', validate(productSchema), auditMiddleware('Product'), async (req, res, next) => {
   try {
     const { name, slug, categoryId, tag, image, gallery, summary, description, content, specs, isFeatured, isActive } = req.body
-    const product = await prisma.product.create({ data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description: sanitizeRichText(description), content: sanitizeRichText(content), specs: parseSpecs(specs), isFeatured, isActive } })
+    const cleanGallery = gallery.filter(Boolean)
+    const product = await prisma.product.create({ data: { name, slug: slug || slugify(name), categoryId, tag, image: image || cleanGallery[0], gallery: cleanGallery, summary, description: sanitizeRichText(description), content: sanitizeRichText(content), specs: parseSpecs(specs), isFeatured, isActive } })
     res.status(201).json(product)
   } catch (error) {
     next(error)
@@ -105,7 +106,8 @@ router.post('/products', validate(productSchema), auditMiddleware('Product'), as
 router.put('/products/:id', validate(productSchema), auditMiddleware('Product'), async (req, res, next) => {
   try {
     const { name, slug, categoryId, tag, image, gallery, summary, description, content, specs, isFeatured, isActive } = req.body
-    const product = await prisma.product.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), categoryId, tag, image, gallery, summary, description: sanitizeRichText(description), content: sanitizeRichText(content), specs: parseSpecs(specs), isFeatured, isActive } })
+    const cleanGallery = gallery.filter(Boolean)
+    const product = await prisma.product.update({ where: { id: req.params.id }, data: { name, slug: slug || slugify(name), categoryId, tag, image: image || cleanGallery[0], gallery: cleanGallery, summary, description: sanitizeRichText(description), content: sanitizeRichText(content), specs: parseSpecs(specs), isFeatured, isActive } })
     res.json(product)
   } catch (error) {
     next(error)
@@ -132,8 +134,8 @@ router.get('/services', async (req, res, next) => {
 
 router.post('/services', validate(serviceSchema), auditMiddleware('Service'), async (req, res, next) => {
   try {
-    const { title, slug, description, content, icon, sortOrder, isActive } = req.body
-    const service = await prisma.service.create({ data: { title, slug: slug || slugify(title), description, content: sanitizeRichText(content), icon, sortOrder, isActive } })
+    const { title, slug, description, content, image, icon, sortOrder, isActive } = req.body
+    const service = await prisma.service.create({ data: { title, slug: slug || slugify(title), description, content: sanitizeRichText(content), image, icon, sortOrder, isActive } })
     res.status(201).json(service)
   } catch (error) {
     next(error)
@@ -142,8 +144,8 @@ router.post('/services', validate(serviceSchema), auditMiddleware('Service'), as
 
 router.put('/services/:id', validate(serviceSchema), auditMiddleware('Service'), async (req, res, next) => {
   try {
-    const { title, slug, description, content, icon, sortOrder, isActive } = req.body
-    const service = await prisma.service.update({ where: { id: req.params.id }, data: { title, slug: slug || slugify(title), description, content: sanitizeRichText(content), icon, sortOrder, isActive } })
+    const { title, slug, description, content, image, icon, sortOrder, isActive } = req.body
+    const service = await prisma.service.update({ where: { id: req.params.id }, data: { title, slug: slug || slugify(title), description, content: sanitizeRichText(content), image, icon, sortOrder, isActive } })
     res.json(service)
   } catch (error) {
     next(error)

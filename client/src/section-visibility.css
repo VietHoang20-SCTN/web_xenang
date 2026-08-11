@@ -1,0 +1,5 @@
+﻿/* ponytail: Scroll reveal is progressive enhancement; sections must remain usable without JS observers. */
+.snap-main > .reveal-clip {
+  clip-path: none !important;
+  opacity: 1 !important;
+}

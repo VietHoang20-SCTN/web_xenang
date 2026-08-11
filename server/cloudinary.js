@@ -81,6 +81,15 @@ async function uploadAboutImage(buffer) {
   })
 }
 
+/** Upload a service cover image. */
+async function uploadServiceImage(buffer) {
+  return uploadImage(buffer, {
+    width: 400,
+    height: 400,
+    quality: 84,
+  })
+}
+
 /**
  * Delete an image from Cloudinary by its secure URL.
  * @param {string} url - The full Cloudinary URL to delete.
@@ -96,4 +105,4 @@ async function deleteImage(url) {
   await cloudinary.uploader.destroy(publicId)
 }
 
-module.exports = { uploadImage, uploadLogo, uploadProductImage, uploadAboutImage, deleteImage, cloudinary }
+module.exports = { uploadImage, uploadLogo, uploadProductImage, uploadAboutImage, uploadServiceImage, deleteImage, cloudinary }

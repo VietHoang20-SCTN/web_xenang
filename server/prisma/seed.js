@@ -25,8 +25,9 @@ const services = [
 ]
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL || 'admin@xenang.local'
-  const password = process.env.ADMIN_PASSWORD || 'Admin@123456'
+  const email = process.env.ADMIN_EMAIL
+  const password = process.env.ADMIN_PASSWORD
+  if (!email || !password) throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required.')
   const passwordHash = await bcrypt.hash(password, 12)
 
   await prisma.adminUser.upsert({
@@ -36,7 +37,7 @@ async function main() {
   })
 
   await prisma.siteSetting.create({
-    data: { brand: 'Xe Nâng Bắc Ninh', hotline: '0900 000 000', zalo: 'https://zalo.me/0900000000', email: 'contact@xenangbacninh.vn', address: 'Bắc Ninh, Việt Nam', mapEmbed: 'https://www.google.com/maps?q=B%E1%BA%AFc%20Ninh%2C%20Vi%E1%BB%87t%20Nam&output=embed' }
+    data: { brand: 'Xe Nâng Bắc Ninh', hotline: '', zalo: process.env.ZALO_URL || '', email: '', address: '', mapEmbed: '' }
   }).catch(async () => {})
 
   for (const category of categories) {

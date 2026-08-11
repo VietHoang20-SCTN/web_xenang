@@ -1,40 +1,69 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, Phone, Zap } from 'lucide-react'
 import { useTheme } from '../hooks'
 import { assetUrl } from '../api'
 
-/**
- * Shared header nav used across all public pages (BlogList, BlogPost, ProductDetail, ServiceDetail).
- * Uses React Router navigate with state to signal PublicSite which section to scroll to.
- */
 export default function PublicNav({ siteSettings = {}, currentPage }) {
   const { theme, toggleTheme } = useTheme()
-  const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuButtonRef = useRef(null)
+  const closeButtonRef = useRef(null)
+  const wasMenuOpen = useRef(false)
 
   useEffect(() => {
     setMenuOpen(false)
   }, [location])
 
-  const goToSection = (e, sectionId) => {
-    e.preventDefault()
-    if (window.location.pathname === '/' || window.location.pathname === '') {
-      // Already on homepage — scroll directly
-      const el = document.getElementById(sectionId)
-      if (el) el.scrollIntoView({ behavior: 'smooth' })
-      else window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-      // Navigate to homepage, passing the target section via state
-      navigate('/', { state: { scrollTo: sectionId } })
+  useEffect(() => {
+    if (!menuOpen) {
+      if (wasMenuOpen.current) menuButtonRef.current?.focus()
+      wasMenuOpen.current = false
+      return
     }
-  }
+
+    wasMenuOpen.current = true
+    const dialog = closeButtonRef.current?.parentElement
+    const siblings = [...(dialog?.parentElement?.children || [])].filter((element) => element !== dialog)
+    const inertStates = siblings.map((element) => [element, element.inert])
+    siblings.forEach((element) => {
+      element.inert = true
+    })
+    closeButtonRef.current?.focus()
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const focusable = [...dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled])')]
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      inertStates.forEach(([element, inert]) => {
+        element.inert = inert
+      })
+    }
+  }, [menuOpen])
 
   return (
     <>
       <header className="site-header blog-site-header">
-        <Link className="brand" to="/">
+        <Link className="brand" to="/#home">
           {(
             theme === 'dark' ? siteSettings.logoDark || siteSettings.logo : siteSettings.logo || siteSettings.logoDark
           ) ? (
@@ -52,33 +81,21 @@ export default function PublicNav({ siteSettings = {}, currentPage }) {
           )}
         </Link>
         <nav className="desktop-nav">
-          <Link to="/" className={currentPage === 'home' ? 'active' : ''}>
+          <Link to="/#home" className={currentPage === 'home' ? 'active' : ''}>
             Trang chủ
           </Link>
-          <a href="#about" className={currentPage === 'about' ? 'active' : ''} onClick={(e) => goToSection(e, 'about')}>
+          <Link to="/#about" className={currentPage === 'about' ? 'active' : ''}>
             Giới thiệu
-          </a>
-          <a
-            href="#products"
-            className={currentPage === 'products' ? 'active' : ''}
-            onClick={(e) => goToSection(e, 'products')}
-          >
+          </Link>
+          <Link to="/#products" className={currentPage === 'products' ? 'active' : ''}>
             Sản phẩm
-          </a>
-          <a
-            href="#services"
-            className={currentPage === 'services' ? 'active' : ''}
-            onClick={(e) => goToSection(e, 'services')}
-          >
+          </Link>
+          <Link to="/#services" className={currentPage === 'services' ? 'active' : ''}>
             Dịch vụ
-          </a>
-          <a
-            href="#contact"
-            className={currentPage === 'contact' ? 'active' : ''}
-            onClick={(e) => goToSection(e, 'contact')}
-          >
+          </Link>
+          <Link to="/#contact" className={currentPage === 'contact' ? 'active' : ''}>
             Liên hệ
-          </a>
+          </Link>
           <Link to="/blog" className={currentPage === 'blog' ? 'active' : ''}>
             Blog
           </Link>
@@ -87,61 +104,64 @@ export default function PublicNav({ siteSettings = {}, currentPage }) {
           <button className="theme-toggle" onClick={toggleTheme} aria-label="Đổi theme">
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Menu">
+          <button
+            ref={menuButtonRef}
+            className="menu-btn"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Mở menu"
+            aria-expanded={menuOpen}
+            aria-controls="public-mobile-menu"
+          >
             <Menu size={20} />
           </button>
         </div>
       </header>
 
       {menuOpen && (
-        <div className="mobile-panel">
-          <button className="close-btn" onClick={() => setMenuOpen(false)}>
+        <div
+          id="public-mobile-menu"
+          className="mobile-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Điều hướng chính"
+        >
+          <button ref={closeButtonRef} className="close-btn" onClick={() => setMenuOpen(false)} aria-label="Đóng menu">
             <X />
           </button>
-          <Link to="/" onClick={() => setMenuOpen(false)}>
+          <Link
+            to="/#home"
+            className={currentPage === 'home' ? 'active' : ''}
+            aria-current={currentPage === 'home' ? 'page' : undefined}
+            onClick={() => setMenuOpen(false)}
+          >
             Trang chủ
           </Link>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMenuOpen(false)
-              goToSection(e, 'about')
-            }}
-            href="#about"
-          >
+          <Link to="/#about" onClick={() => setMenuOpen(false)}>
             Giới thiệu
-          </a>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMenuOpen(false)
-              goToSection(e, 'products')
-            }}
-            href="#products"
+          </Link>
+          <Link
+            to="/#products"
+            className={currentPage === 'products' ? 'active' : ''}
+            onClick={() => setMenuOpen(false)}
           >
             Sản phẩm
-          </a>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMenuOpen(false)
-              goToSection(e, 'services')
-            }}
-            href="#services"
+          </Link>
+          <Link
+            to="/#services"
+            className={currentPage === 'services' ? 'active' : ''}
+            onClick={() => setMenuOpen(false)}
           >
             Dịch vụ
-          </a>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMenuOpen(false)
-              goToSection(e, 'contact')
-            }}
-            href="#contact"
-          >
+          </Link>
+          <Link to="/#contact" onClick={() => setMenuOpen(false)}>
             Liên hệ
-          </a>
-          <Link to="/blog" onClick={() => setMenuOpen(false)}>
+          </Link>
+          <Link
+            to="/blog"
+            className={currentPage === 'blog' ? 'active' : ''}
+            aria-current={currentPage === 'blog' ? 'page' : undefined}
+            onClick={() => setMenuOpen(false)}
+          >
             Blog
           </Link>
           <a className="mobile-drawer-phone" href={`tel:${siteSettings.hotline || '0900000000'}`}>

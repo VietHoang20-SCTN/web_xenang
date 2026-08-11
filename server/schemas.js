@@ -35,6 +35,7 @@ const serviceSchema = z.object({
   slug: z.string().max(250).optional().default(''),
   description: z.string().max(5000).optional().nullable(),
   content: z.string().max(50000).optional().nullable(),
+  image: z.string().max(500).optional().nullable(),
   icon: z.string().max(100).optional().nullable(),
   sortOrder: z.coerce.number().int().min(0).max(9999).default(0),
   isActive: z.boolean().default(true),
@@ -54,6 +55,9 @@ const productSchema = z.object({
   specs: z.array(z.string().max(500)).max(50).default([]),
   isFeatured: z.boolean().default(false),
   isActive: z.boolean().default(true),
+}).refine((product) => Boolean(product.image?.trim() || product.gallery.some((image) => image?.trim())), {
+  message: 'Vui lòng tải ít nhất một ảnh sản phẩm.',
+  path: ['image'],
 })
 
 // --- Admin: Lead status update ---

@@ -19,8 +19,14 @@ export function api(path, options = {}) {
     },
   }).then(async (response) => {
     if (response.status === 204) return null
-    const data = await response.json().catch(() => null)
-    if (!response.ok) throw new Error(data?.message || 'Có lỗi xảy ra.')
+    const contentType = response.headers.get('content-type') || ''
+    const data = contentType.includes('application/json')
+      ? await response.json().catch(() => null)
+      : await response.text().catch(() => '')
+    if (!response.ok) {
+      const message = typeof data === 'object' ? data?.message : data
+      throw new Error(message || `Yêu cầu thất bại (${response.status}).`)
+    }
     return data
   })
 }
@@ -47,4 +53,10 @@ export async function uploadAboutImage(file) {
   const formData = new FormData()
   formData.append('image', file)
   return api('/upload/about-image', { method: 'POST', body: formData, headers: {} })
+}
+
+export async function uploadServiceImage(file) {
+  const formData = new FormData()
+  formData.append('image', file)
+  return api('/upload/service-image', { method: 'POST', body: formData, headers: {} })
 }

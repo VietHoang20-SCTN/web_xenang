@@ -1,7 +1,7 @@
 const express = require('express')
 const multer = require('multer')
 const { requireAuth } = require('../middleware/auth')
-const { uploadLogo, uploadProductImage, uploadAboutImage } = require('../cloudinary')
+const { uploadLogo, uploadProductImage, uploadAboutImage, uploadServiceImage } = require('../cloudinary')
 // const fileType = require('file-type')
 const { fileTypeFromBuffer } = require('file-type')
 
@@ -75,6 +75,12 @@ router.post('/logo', requireAuth, logoHandler(async (req, res) => {
 router.post('/about-image', requireAuth, uploadHandler(async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn ảnh giới thiệu.' })
   const url = await uploadAboutImage(req.file.buffer)
+  res.status(201).json({ url })
+}))
+
+router.post('/service-image', requireAuth, uploadHandler(async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn ảnh dịch vụ.' })
+  const url = await uploadServiceImage(req.file.buffer)
   res.status(201).json({ url })
 }))
 

@@ -202,14 +202,14 @@ export default function BlogPost() {
             <Link to="/#quote" className="primary-btn blog-sidebar-cta-btn">
               Nhận báo giá <ArrowRight size={16} />
             </Link>
-            <a
+            {siteSettings.zalo && <a
               className="zalo-icon-btn blog-sidebar-zalo"
-              href="https://zalo.me/0900000000"
+              href={siteSettings.zalo}
               target="_blank"
               rel="noopener noreferrer"
             >
               <span>Chat Zalo</span>
-            </a>
+            </a>}
           </div>
         </aside>
       </main>

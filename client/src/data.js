@@ -79,7 +79,7 @@ export const leads = [
 export const siteSettings = {
   brand: 'Xe Nâng Bắc Ninh',
   hotline: '0900 000 000',
-  zalo: 'https://zalo.me/0900000000',
+  zalo: '',
   address: 'Bắc Ninh, Việt Nam',
   email: 'contact@xenangbacninh.vn',
   mapEmbed: 'https://www.google.com/maps?q=B%E1%BA%AFc%20Ninh%2C%20Vi%E1%BB%87t%20Nam&output=embed',

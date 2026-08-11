@@ -1,9 +1,26 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowRight, ChevronLeft, ChevronRight, Clock, Gauge, Weight, Zap, Ruler, Battery, Shield, Box, Truck, Package, Settings, Search, X } from 'lucide-react'
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Gauge,
+  Weight,
+  Zap,
+  Ruler,
+  Battery,
+  Shield,
+  Box,
+  Truck,
+  Package,
+  Settings,
+  Search,
+  X,
+} from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { notify } from '../toast'
-import { categories as fallbackCategories, products as fallbackProducts } from '../data'
+
 import PublicNav from './PublicNav'
 
 export default function ProductDetail() {
@@ -18,28 +35,25 @@ export default function ProductDetail() {
   const [lightbox, setLightbox] = useState(null)
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
         const [cats, prod] = await Promise.all([
-          api('/public/categories').catch(() => fallbackCategories),
-          api(`/public/products/${slug}`)
+          api('/public/categories'),
+          api(`/public/products/${slug}`),
         ])
         setCategories(cats)
         setProduct(prod)
         setMainImage(prod.image || '')
         document.title = `${prod.name} | Xe Nâng Bắc Ninh`
       } catch {
-        const fb = fallbackProducts.find(p => p.id === slug)
-        if (fb) {
-          setProduct(fb)
-          setMainImage(fb.image || '')
-          document.title = `${fb.name} | Xe Nâng Bắc Ninh`
-        }
+        setProduct(null)
       } finally {
         setLoading(false)
       }
     })()
-    api('/public/site-settings').then(s => setSiteSettings(s || {})).catch(() => {})
+    api('/public/site-settings')
+      .then((s) => setSiteSettings(s || {}))
+      .catch(() => {})
   }, [slug])
 
   const submitLead = async (e) => {
@@ -56,17 +70,33 @@ export default function ProductDetail() {
     }
   }
 
-  if (loading) return <div className="detail-loading"><div className="spinner" /><p>Đang tải...</p></div>
-  if (!product) return <div className="detail-loading"><h2>Không tìm thấy sản phẩm</h2><Link to="/" className="primary-btn">← Về trang chủ</Link></div>
+  if (loading)
+    return (
+      <div className="detail-loading">
+        <div className="spinner" />
+        <p>Đang tải...</p>
+      </div>
+    )
+  if (!product)
+    return (
+      <div className="detail-loading">
+        <h2>Không tìm thấy sản phẩm</h2>
+        <Link to="/" className="primary-btn">
+          ← Về trang chủ
+        </Link>
+      </div>
+    )
 
   const gallery = product.gallery || []
   const specs = product.specs || []
-  const category = categories.find(c => c.id === product.categoryId || c.slug === product.categoryId)
+  const category = categories.find((c) => c.id === product.categoryId || c.slug === product.categoryId)
 
   return (
     <>
       <div className="particles" aria-hidden="true">
-        {Array.from({ length: 6 }).map((_, i) => <span key={i} className={`orb orb-${i + 1}`} />)}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span key={i} className={`orb orb-${i + 1}`} />
+        ))}
       </div>
 
       <PublicNav siteSettings={siteSettings} currentPage="products" />
@@ -74,19 +104,29 @@ export default function ProductDetail() {
       <main className="detail-page">
         <div className="detail-breadcrumb">
           <Link to="/">Trang chủ</Link> / <Link to="/#products">Sản phẩm</Link>
-          {category && <span> / <Link to={`/?category=${category.slug || category.id}`}>{category.name}</Link></span>}
+          {category && (
+            <span>
+              {' '}
+              / <Link to="/#products">{category.name}</Link>
+            </span>
+          )}
           <span> / {product.name}</span>
         </div>
 
         <div className="detail-layout">
           <div className="detail-gallery">
-            <div className="detail-main-image" onClick={() => {
-              const imgs = [product.image, ...gallery].filter(Boolean)
-              setLightbox({ images: imgs, index: imgs.indexOf(mainImage) })
-            }}>
+            <div
+              className="detail-main-image"
+              onClick={() => {
+                const imgs = [product.image, ...gallery].filter(Boolean)
+                setLightbox({ images: imgs, index: imgs.indexOf(mainImage) })
+              }}
+            >
               <img src={assetUrl(mainImage)} alt={product.name} />
               {product.tag && <span className="detail-tag">{product.tag}</span>}
-              <div className="detail-zoom-hint"><Search size={16} /> Click để xem ảnh</div>
+              <div className="detail-zoom-hint">
+                <Search size={16} /> Click để xem ảnh
+              </div>
             </div>
             {(() => {
               const imgs = [product.image, ...gallery].filter(Boolean)
@@ -94,7 +134,11 @@ export default function ProductDetail() {
               return (
                 <div className="detail-thumb-grid">
                   {imgs.map((img, i) => (
-                    <button key={i} className={`detail-thumb-card${img === mainImage ? ' active' : ''}`} onClick={() => setMainImage(img)}>
+                    <button
+                      key={i}
+                      className={`detail-thumb-card${img === mainImage ? ' active' : ''}`}
+                      onClick={() => setMainImage(img)}
+                    >
                       <img src={assetUrl(img)} alt={`${product.name} ${i + 1}`} />
                     </button>
                   ))}
@@ -112,7 +156,9 @@ export default function ProductDetail() {
               <div className="detail-specs">
                 <h3>Thông số kỹ thuật</h3>
                 <ul>
-                  {specs.map((s, i) => <li key={i}>{s}</li>)}
+                  {specs.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -128,10 +174,32 @@ export default function ProductDetail() {
             <div className="detail-quote" id="quote">
               <h3>Yêu cầu báo giá</h3>
               <form onSubmit={submitLead}>
-                <input type="text" required placeholder="Họ và tên *" value={leadForm.name} onChange={e => setLeadForm({ ...leadForm, name: e.target.value })} />
-                <input type="tel" required placeholder="Số điện thoại *" value={leadForm.phone} onChange={e => setLeadForm({ ...leadForm, phone: e.target.value })} />
-                <input type="text" placeholder="Công ty (không bắt buộc)" value={leadForm.company} onChange={e => setLeadForm({ ...leadForm, company: e.target.value })} />
-                <textarea placeholder="Nhu cầu của bạn..." rows={3} value={leadForm.need} onChange={e => setLeadForm({ ...leadForm, need: e.target.value })} />
+                <input
+                  type="text"
+                  required
+                  placeholder="Họ và tên *"
+                  value={leadForm.name}
+                  onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                />
+                <input
+                  type="tel"
+                  required
+                  placeholder="Số điện thoại *"
+                  value={leadForm.phone}
+                  onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Công ty (không bắt buộc)"
+                  value={leadForm.company}
+                  onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
+                />
+                <textarea
+                  placeholder="Nhu cầu của bạn..."
+                  rows={3}
+                  value={leadForm.need}
+                  onChange={(e) => setLeadForm({ ...leadForm, need: e.target.value })}
+                />
                 <button className="primary-btn" type="submit" disabled={submitting}>
                   {submitting ? 'Đang gửi...' : 'Gửi yêu cầu báo giá'} <ArrowRight size={18} />
                 </button>
@@ -152,14 +220,26 @@ export default function ProductDetail() {
       {/* Lightbox */}
       {lightbox && (
         <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
-          <button className="lightbox-close" onClick={() => setLightbox(null)}><X size={24} /></button>
-          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+          <button className="lightbox-close" onClick={() => setLightbox(null)}>
+            <X size={24} />
+          </button>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img src={assetUrl(lightbox.images[lightbox.index])} alt={lightbox.index} />
           </div>
           {lightbox.images.length > 1 && (
             <>
-              <button className="lightbox-prev" onClick={() => setLightbox(l => ({ ...l, index: l.index === 0 ? l.images.length - 1 : l.index - 1 }))}><ChevronLeft size={28} /></button>
-              <button className="lightbox-next" onClick={() => setLightbox(l => ({ ...l, index: l.index === l.images.length - 1 ? 0 : l.index + 1 }))}><ChevronRight size={28} /></button>
+              <button
+                className="lightbox-prev"
+                onClick={() => setLightbox((l) => ({ ...l, index: l.index === 0 ? l.images.length - 1 : l.index - 1 }))}
+              >
+                <ChevronLeft size={28} />
+              </button>
+              <button
+                className="lightbox-next"
+                onClick={() => setLightbox((l) => ({ ...l, index: l.index === l.images.length - 1 ? 0 : l.index + 1 }))}
+              >
+                <ChevronRight size={28} />
+              </button>
             </>
           )}
         </div>

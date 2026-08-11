@@ -1,35 +1,11 @@
-import React, { useState, useEffect } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import LinkExtension from '@tiptap/extension-link'
-import ImageExtension from '@tiptap/extension-image'
-import Placeholder from '@tiptap/extension-placeholder'
-import UnderlineExtension from '@tiptap/extension-underline'
-import {
-  Bold,
-  Calendar,
-  Edit,
-  Eye,
-  EyeOff,
-  Heading2,
-  Heading3,
-  ImageUp,
-  Italic,
-  Link,
-  List,
-  ListOrdered,
-  Plus,
-  Save,
-  Strikethrough,
-  Trash2,
-  Underline,
-  Upload,
-  X,
-} from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { Calendar, Edit, Eye, EyeOff, ImageUp, Plus, Save, Trash2, Upload, X } from 'lucide-react'
 import { api, assetUrl } from '../api'
 import { notify } from '../toast'
+import BlogArticle from './BlogArticle'
+import RichTextEditor from './RichTextEditor'
 
-const empty = { title: '', slug: '', excerpt: '', content: '', coverImage: '', tags: [], isPublished: false }
+const empty = { title: '', slug: '', excerpt: '', content: '', coverImage: '', tags: [], isPublished: true }
 
 export default function AdminBlog({ posts, onRefresh }) {
   const [form, setForm] = useState(empty)
@@ -37,19 +13,24 @@ export default function AdminBlog({ posts, onRefresh }) {
   const [showForm, setShowForm] = useState(false)
   const [tagInput, setTagInput] = useState('')
   const [uploading, setUploading] = useState(false)
-  const [activeTab, setActiveTab] = useState('write') // 'write' | 'preview'
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
-      UnderlineExtension,
-      LinkExtension,
-      ImageExtension,
-      Placeholder.configure({ placeholder: 'Bắt đầu viết nội dung...' }),
-    ],
-    onUpdate: ({ editor }) => {
-      setForm((prev) => ({ ...prev, content: editor.getHTML() }))
-    },
-  })
+  const [saving, setSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState('write')
+  const coverInputRef = useRef(null)
+  const dialogRef = useRef(null)
+  const titleInputRef = useRef(null)
+  const triggerRef = useRef(null)
+  const savingRef = useRef(false)
+  const togglingRef = useRef(new Set())
+  const [togglingId, setTogglingId] = useState(null)
+
+  useEffect(() => {
+    if (showForm) {
+      titleInputRef.current?.focus()
+      return
+    }
+    triggerRef.current?.focus()
+    triggerRef.current = null
+  }, [showForm])
 
   const reset = () => {
     setForm(empty)
@@ -58,19 +39,53 @@ export default function AdminBlog({ posts, onRefresh }) {
     setTagInput('')
     setActiveTab('write')
   }
-  const newPost = () => {
-    setForm({ ...empty })
+
+  const closeForm = () => {
+    if (!savingRef.current) reset()
+  }
+
+  const newPost = (event) => {
+    triggerRef.current = event.currentTarget
+    setForm({ ...empty, tags: [] })
     setEditing(false)
     setShowForm(true)
     setTagInput('')
     setActiveTab('write')
   }
 
-  const edit = (post) => {
+  const edit = (post, event) => {
+    triggerRef.current = event.currentTarget
     setForm({ ...post, tags: post.tags || [] })
     setEditing(true)
     setShowForm(true)
+    setTagInput('')
     setActiveTab('write')
+  }
+
+  const handleDialogKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      closeForm()
+      return
+    }
+    if (event.key !== 'Tab') return
+
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+      ) || []
+    ).filter((element) => element.offsetParent !== null)
+    if (!focusable.length) return
+
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
   }
 
   const remove = async (id) => {
@@ -84,25 +99,47 @@ export default function AdminBlog({ posts, onRefresh }) {
     }
   }
 
+  const togglePublished = async (post) => {
+    if (togglingRef.current.has(post.id)) return
+    togglingRef.current.add(post.id)
+    setTogglingId(post.id)
+    const isPublished = !post.isPublished
+    try {
+      await api(`/admin/blog/${post.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...post, isPublished }),
+      })
+      notify.success(isPublished ? 'Đã xuất bản bài viết.' : 'Đã chuyển bài viết về bản nháp.')
+      onRefresh()
+    } catch (err) {
+      notify.error(err.message)
+    } finally {
+      togglingRef.current.delete(post.id)
+      setTogglingId(null)
+    }
+  }
+
   const addTag = () => {
-    const t = tagInput.trim()
-    if (t && !form.tags.includes(t)) setForm({ ...form, tags: [...form.tags, t] })
+    const tag = tagInput.trim()
+    if (tag) setForm((prev) => (prev.tags.includes(tag) ? prev : { ...prev, tags: [...prev.tags, tag] }))
     setTagInput('')
   }
 
   const removeTag = (tag) => {
-    setForm({ ...form, tags: form.tags.filter((t) => t !== tag) })
+    setForm((prev) => ({ ...prev, tags: prev.tags.filter((currentTag) => currentTag !== tag) }))
   }
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0]
+  const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
+
     setUploading(true)
-    const fd = new FormData()
-    fd.append('image', file)
+    const data = new FormData()
+    data.append('image', file)
     try {
-      const result = await api('/upload/product-image', { method: 'POST', body: fd, headers: {} })
-      setForm({ ...form, coverImage: result.url })
+      const result = await api('/upload/product-image', { method: 'POST', body: data, headers: {} })
+      setForm((prev) => ({ ...prev, coverImage: result.url }))
       notify.success('Đã upload ảnh bìa.')
     } catch (err) {
       notify.error(err.message)
@@ -111,30 +148,17 @@ export default function AdminBlog({ posts, onRefresh }) {
     }
   }
 
-  useEffect(() => {
-    if (editor && form.content && editor.getHTML() !== form.content) {
-      editor.commands.setContent(form.content || '')
-    }
-  }, [editor, showForm, activeTab])
-
-  const insertImage = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const fd = new FormData()
-    fd.append('image', file)
+  const uploadInlineImage = async (file) => {
+    const data = new FormData()
+    data.append('image', file)
     try {
-      const result = await api('/upload/product-image', { method: 'POST', body: fd, headers: {} })
-      const imgUrl = assetUrl(result.url)
-      editor?.chain().focus().setImage({ src: imgUrl }).run()
+      const result = await api('/upload/product-image', { method: 'POST', body: data, headers: {} })
       notify.success('Đã chèn ảnh.')
+      return assetUrl(result.url)
     } catch (err) {
       notify.error(err.message)
+      return null
     }
-  }
-
-  const insertLink = () => {
-    const url = prompt('Nhập URL:')
-    if (url) editor?.chain().focus().setLink({ href: url }).run()
   }
 
   const isFormValid = Boolean(
@@ -147,71 +171,44 @@ export default function AdminBlog({ posts, onRefresh }) {
     form.content.replace(/<[^>]*>/g, '').trim() !== ''
   )
 
-  const confirmPublish = () => {
-    const overlay = document.createElement('div')
-    overlay.className = 'blog-confirm-overlay'
-    overlay.innerHTML = `
-      <div class="blog-confirm-card">
-        <h3>Xác nhận đăng bài</h3>
-        <p>Bài viết đã đủ thông tin. Bạn muốn:</p>
-        <div class="blog-confirm-actions">
-          <button class="primary-btn" id="btn-publish"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Xuất bản ngay</button>
-          <button class="secondary-btn" id="btn-draft"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Lưu thành bản nháp</button>
-          <button class="blog-confirm-cancel" id="btn-cancel">Hủy</button>
-        </div>
-      </div>
-    `
-    document.body.appendChild(overlay)
+  const save = async (event) => {
+    event.preventDefault()
+    if (savingRef.current || !isFormValid) return
 
-    return new Promise((resolve) => {
-      overlay.querySelector('#btn-publish').onclick = () => {
-        overlay.remove()
-        resolve(true)
-      }
-      overlay.querySelector('#btn-draft').onclick = () => {
-        overlay.remove()
-        resolve(false)
-      }
-      overlay.querySelector('#btn-cancel').onclick = () => {
-        overlay.remove()
-        resolve(null)
-      }
-      overlay.onclick = (e) => {
-        if (e.target === overlay) {
-          overlay.remove()
-          resolve(null)
-        }
-      }
-    })
-  }
-
-  const save = async (e) => {
-    e.preventDefault()
-    if (!isFormValid) return
-    const shouldPublish = await confirmPublish()
-    if (shouldPublish === null) return
-    const payload = { ...form, isPublished: shouldPublish }
+    savingRef.current = true
+    setSaving(true)
+    const payload = { ...form }
     try {
       if (editing) {
         await api('/admin/blog/' + form.id, { method: 'PUT', body: JSON.stringify(payload) })
         notify.success('Đã cập nhật bài viết.')
       } else {
         await api('/admin/blog', { method: 'POST', body: JSON.stringify(payload) })
-        notify.success(shouldPublish ? 'Bài viết đã được xuất bản!' : 'Bài viết đã được lưu thành bản nháp.')
+        notify.success(form.isPublished ? 'Bài viết đã được xuất bản!' : 'Bài viết đã được lưu thành bản nháp.')
       }
       reset()
       onRefresh()
     } catch (err) {
       notify.error(err.message)
+    } finally {
+      savingRef.current = false
+      setSaving(false)
     }
   }
 
-  const formatDate = (d) =>
-    new Date(d).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+
+  const submitLabel = saving
+    ? 'Đang lưu...'
+    : editing
+      ? 'Cập nhật bài viết'
+      : form.isPublished
+        ? 'Xuất bản bài viết'
+        : 'Lưu bản nháp'
 
   return (
     <div className="admin-section">
-      {/* ── Header ── */}
       <div className="blog-admin-header">
         <div className="blog-admin-header-left">
           <h2>Quản lý Blog</h2>
@@ -222,111 +219,112 @@ export default function AdminBlog({ posts, onRefresh }) {
         </button>
       </div>
 
-      {/* ── Editor Modal ── */}
       {showForm && (
         <div
           className="modal-backdrop"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) reset()
-          }}
+          role="presentation"
+          onClick={(event) => event.target === event.currentTarget && closeForm()}
         >
           <div
+            ref={dialogRef}
             className="blog-editor-card"
-            style={{
-              maxWidth: 'min(1200px, 96vw)',
-              maxHeight: '96vh',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              width: '100%',
-            }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="blog-editor-title"
+            onKeyDown={handleDialogKeyDown}
           >
-            {/* Card Header */}
             <div className="blog-editor-header">
               <div className="blog-editor-header-left">
                 <div className="blog-editor-icon">
                   <Edit size={20} />
                 </div>
                 <div>
-                  <h3>{editing ? 'Chỉnh sửa bài viết' : 'Bài viết mới'}</h3>
+                  <h3 id="blog-editor-title">{editing ? 'Chỉnh sửa bài viết' : 'Bài viết mới'}</h3>
                   <p>{editing ? 'Cập nhật nội dung bài viết hiện tại' : 'Tạo bài viết mới để thu hút khách hàng'}</p>
                 </div>
               </div>
-              <button type="button" className="blog-editor-close" onClick={reset}>
+              <button
+                type="button"
+                className="blog-editor-close"
+                onClick={closeForm}
+                aria-label="Đóng trình soạn thảo bài viết"
+                disabled={saving}
+              >
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={save}>
               <div className="blog-editor-body">
-                {/* ── Left Column: Metadata ── */}
                 <div className="blog-editor-sidebar">
-                  {/* Cover Image */}
                   <div className="blog-editor-section">
-                    <label className="blog-editor-section-label">Ảnh bìa</label>
-                    <div
-                      className="blog-cover-upload"
-                      onClick={() => !form.coverImage && document.getElementById('blog-cover-input')?.click()}
-                    >
+                    <label className="blog-editor-section-label" htmlFor="blog-cover-input">
+                      Ảnh bìa
+                    </label>
+                    <div className="blog-cover-upload">
                       {form.coverImage ? (
                         <div className="blog-cover-preview">
-                          <img src={assetUrl(form.coverImage)} alt="Cover" />
+                          <img src={assetUrl(form.coverImage)} alt="Ảnh bìa bài viết" />
                           <div className="blog-cover-actions">
                             <button
                               type="button"
                               className="blog-cover-action-btn"
-                              onClick={() => document.getElementById('blog-cover-input')?.click()}
+                              onClick={() => coverInputRef.current?.click()}
                             >
                               <Upload size={14} /> Đổi ảnh
                             </button>
                             <button
                               type="button"
                               className="blog-cover-action-btn danger"
-                              onClick={() => setForm({ ...form, coverImage: '' })}
+                              onClick={() => setForm((prev) => ({ ...prev, coverImage: '' }))}
                             >
                               <Trash2 size={14} /> Xóa
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="blog-cover-placeholder">
+                        <label className="blog-cover-placeholder" htmlFor="blog-cover-input">
                           <ImageUp size={32} />
                           <span>{uploading ? 'Đang tải lên...' : 'Tải ảnh bìa lên'}</span>
                           <small>Kích thước khuyến nghị: 1200×630px</small>
-                        </div>
+                        </label>
                       )}
                       <input
+                        ref={coverInputRef}
                         id="blog-cover-input"
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
+                        aria-label="Chọn ảnh bìa bài viết"
                         hidden
                         disabled={uploading}
                       />
                     </div>
                   </div>
 
-                  {/* Tags */}
                   <div className="blog-editor-section">
-                    <label className="blog-editor-section-label">Thẻ (Tags)</label>
+                    <label className="blog-editor-section-label" htmlFor="blog-tag-input">
+                      Thẻ (Tags)
+                    </label>
                     <div className="blog-tag-input-wrap">
                       <input
+                        id="blog-tag-input"
                         type="text"
                         value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                        onChange={(event) => setTagInput(event.target.value)}
+                        onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), addTag())}
                         placeholder="Thêm thẻ..."
                       />
-                      <button type="button" onClick={addTag} className="blog-tag-add-btn">
+                      <button type="button" onClick={addTag} className="blog-tag-add-btn" aria-label="Thêm thẻ">
                         +
                       </button>
                     </div>
                     {form.tags.length > 0 && (
                       <div className="blog-tag-cloud">
-                        {form.tags.map((t) => (
-                          <span key={t} className="blog-tag-pill">
-                            {t}
-                            <button type="button" onClick={() => removeTag(t)}>
+                        {form.tags.map((tag) => (
+                          <span key={tag} className="blog-tag-pill">
+                            {tag}
+                            <button type="button" onClick={() => removeTag(tag)} aria-label={`Xóa thẻ ${tag}`}>
                               <X size={11} />
                             </button>
                           </span>
@@ -335,13 +333,13 @@ export default function AdminBlog({ posts, onRefresh }) {
                     )}
                   </div>
 
-                  {/* Publish Toggle */}
                   <div className="blog-editor-section">
                     <label className="blog-editor-section-label">Trạng thái</label>
                     <button
                       type="button"
                       className={`blog-publish-toggle ${form.isPublished ? 'active' : ''}`}
-                      onClick={() => setForm({ ...form, isPublished: !form.isPublished })}
+                      onClick={() => setForm((prev) => ({ ...prev, isPublished: !prev.isPublished }))}
+                      aria-pressed={form.isPublished}
                     >
                       {form.isPublished ? (
                         <>
@@ -356,57 +354,64 @@ export default function AdminBlog({ posts, onRefresh }) {
                   </div>
                 </div>
 
-                {/* ── Right Column: Content ── */}
                 <div className="blog-editor-main">
-                  {/* Title */}
                   <div className="blog-editor-section">
                     <input
+                      ref={titleInputRef}
                       type="text"
                       required
                       value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value, slug: form.slug || '' })}
+                      onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
                       placeholder="Tiêu đề bài viết..."
                       className="blog-title-field"
+                      aria-label="Tiêu đề bài viết"
                     />
                   </div>
 
-                  {/* Slug */}
                   <div className="blog-editor-section">
                     <div className="blog-slug-row">
                       <span className="blog-slug-prefix">/blog/</span>
                       <input
                         type="text"
                         value={form.slug}
-                        onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                        onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
                         placeholder="slug-bai-viet"
                         className="blog-slug-field"
+                        aria-label="Đường dẫn bài viết"
                       />
                     </div>
                   </div>
 
-                  {/* Excerpt */}
                   <div className="blog-editor-section">
                     <textarea
                       rows={2}
                       value={form.excerpt || ''}
-                      onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                      onChange={(event) => setForm((prev) => ({ ...prev, excerpt: event.target.value }))}
                       placeholder="Mô tả ngắn — hiển thị trong danh sách bài viết và kết quả tìm kiếm..."
                       className="blog-excerpt-field"
+                      aria-label="Mô tả ngắn bài viết"
                     />
                   </div>
 
-                  {/* Rich Text Editor */}
                   <div className="blog-editor-section">
-                    <div className="blog-editor-tabs">
+                    <div className="blog-editor-tabs" role="tablist" aria-label="Chế độ soạn thảo bài viết">
                       <button
+                        id="blog-write-tab"
                         type="button"
+                        role="tab"
+                        aria-selected={activeTab === 'write'}
+                        aria-controls="blog-write-panel"
                         className={`blog-editor-tab ${activeTab === 'write' ? 'active' : ''}`}
                         onClick={() => setActiveTab('write')}
                       >
                         <Edit size={14} /> Viết
                       </button>
                       <button
+                        id="blog-preview-tab"
                         type="button"
+                        role="tab"
+                        aria-selected={activeTab === 'preview'}
+                        aria-controls="blog-preview-panel"
                         className={`blog-editor-tab ${activeTab === 'preview' ? 'active' : ''}`}
                         onClick={() => setActiveTab('preview')}
                       >
@@ -415,131 +420,73 @@ export default function AdminBlog({ posts, onRefresh }) {
                     </div>
 
                     {activeTab === 'write' ? (
-                      <div className="blog-rich-editor">
-                        <div className="blog-rich-toolbar">
-                          <div className="blog-toolbar-group">
-                            <button
-                              type="button"
-                              className={editor?.isActive('bold') ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleBold().run()}
-                              title="In đậm (Ctrl+B)"
-                            >
-                              <Bold size={15} />
-                            </button>
-                            <button
-                              type="button"
-                              className={editor?.isActive('italic') ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleItalic().run()}
-                              title="In nghiêng (Ctrl+I)"
-                            >
-                              <Italic size={15} />
-                            </button>
-                            <button
-                              type="button"
-                              className={editor?.isActive('underline') ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                              title="Gạch chân (Ctrl+U)"
-                            >
-                              <Underline size={15} />
-                            </button>
-                            <button
-                              type="button"
-                              className={editor?.isActive('strike') ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleStrike().run()}
-                              title="Gạch ngang"
-                            >
-                              <Strikethrough size={15} />
-                            </button>
-                          </div>
-                          <div className="blog-toolbar-group">
-                            <button
-                              type="button"
-                              className={editor?.isActive('heading', { level: 2 }) ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-                              title="Tiêu đề lớn"
-                            >
-                              <Heading2 size={15} />
-                            </button>
-                            <button
-                              type="button"
-                              className={editor?.isActive('heading', { level: 3 }) ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-                              title="Tiêu đề nhỏ"
-                            >
-                              <Heading3 size={15} />
-                            </button>
-                          </div>
-                          <div className="blog-toolbar-group">
-                            <button
-                              type="button"
-                              className={editor?.isActive('bulletList') ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                              title="Danh sách"
-                            >
-                              <List size={15} />
-                            </button>
-                            <button
-                              type="button"
-                              className={editor?.isActive('orderedList') ? 'active' : ''}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                              title="Danh sách số"
-                            >
-                              <ListOrdered size={15} />
-                            </button>
-                          </div>
-                          <div className="blog-toolbar-group">
-                            <button
-                              type="button"
-                              onClick={insertLink}
-                              onMouseDown={(e) => e.preventDefault()}
-                              title="Chèn liên kết"
-                            >
-                              <Link size={15} />
-                            </button>
-                            <label className="blog-toolbar-upload-btn" title="Chèn ảnh">
-                              <ImageUp size={15} />
-                              <input type="file" accept="image/*" onChange={insertImage} hidden />
-                            </label>
-                          </div>
-                        </div>
-                        <EditorContent editor={editor} className="blog-rich-content" />
+                      <div
+                        id="blog-write-panel"
+                        className="blog-rich-editor"
+                        role="tabpanel"
+                        aria-labelledby="blog-write-tab"
+                      >
+                        <RichTextEditor
+                          value={form.content}
+                          onChange={(content) => setForm((prev) => ({ ...prev, content }))}
+                          onUploadImage={uploadInlineImage}
+                        />
                       </div>
                     ) : (
-                      <div className="blog-preview-pane">
-                        {form.content ? (
-                          <div className="blog-preview-content" dangerouslySetInnerHTML={{ __html: form.content }} />
-                        ) : (
-                          <div className="blog-preview-empty">
-                            <Edit size={32} />
-                            <p>Chưa có nội dung. Hãy viết gì đó trong tab "Viết".</p>
+                      <div
+                        id="blog-preview-panel"
+                        className="blog-preview-pane"
+                        role="tabpanel"
+                        aria-labelledby="blog-preview-tab"
+                      >
+                        <div className="blog-preview-browser" aria-label="Cửa sổ xem trước bài viết">
+                          <div className="blog-preview-browser-bar">
+                            <div className="blog-preview-browser-dots" aria-hidden="true">
+                              <span />
+                              <span />
+                              <span />
+                            </div>
+                            <div className="blog-preview-address">
+                              <span>🔒</span> xenangbacninh.vn/blog/{form.slug || 'duong-dan-bai-viet'}
+                            </div>
+                            <span className="blog-preview-live">Xem trước trực tiếp</span>
                           </div>
-                        )}
+                          <div className="blog-preview-viewport">
+                            {form.content ? (
+                              <BlogArticle
+                                post={{
+                                  ...form,
+                                  title: form.title || 'Tiêu đề bài viết',
+                                  excerpt: form.excerpt || 'Mô tả ngắn của bài viết sẽ hiển thị tại đây.',
+                                  createdAt: form.createdAt || new Date().toISOString(),
+                                }}
+                                embedded
+                              />
+                            ) : (
+                              <div className="blog-preview-empty">
+                                <Edit size={32} />
+                                <p>Chưa có nội dung. Hãy viết gì đó trong tab "Viết".</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* ── Footer Actions ── */}
               <div className="blog-editor-footer">
-                <button type="button" className="secondary-btn" onClick={reset}>
+                <button type="button" className="secondary-btn" onClick={closeForm} disabled={saving}>
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className={'primary-btn blog-save-btn' + (isFormValid ? '' : ' disabled')}
-                  disabled={!isFormValid}
+                  className={'primary-btn blog-save-btn' + (isFormValid && !saving ? '' : ' disabled')}
+                  disabled={!isFormValid || saving}
                 >
                   <Save size={18} />
-                  {editing ? 'Cập nhật bài viết' : 'Đăng bài viết'}
+                  {submitLabel}
                 </button>
               </div>
             </form>
@@ -547,7 +494,6 @@ export default function AdminBlog({ posts, onRefresh }) {
         </div>
       )}
 
-      {/* ── Posts List ── */}
       <div className="blog-posts-list">
         {posts?.length === 0 && !showForm && (
           <div className="blog-empty-state">
@@ -585,18 +531,40 @@ export default function AdminBlog({ posts, onRefresh }) {
               <h4>{post.title}</h4>
               {post.excerpt && <p>{post.excerpt}</p>}
               <div className="blog-post-item-tags">
-                {(post.tags || []).map((t) => (
-                  <span key={t} className="blog-post-tag">
-                    {t}
+                {(post.tags || []).map((tag) => (
+                  <span key={tag} className="blog-post-tag">
+                    {tag}
                   </span>
                 ))}
               </div>
             </div>
             <div className="blog-post-item-actions">
-              <button className="icon-btn" onClick={() => edit(post)} title="Chỉnh sửa">
+              <button
+                type="button"
+                className={`blog-list-publish-toggle ${post.isPublished ? 'active' : ''}`}
+                onClick={() => togglePublished(post)}
+                disabled={togglingId === post.id}
+                title={post.isPublished ? 'Chuyển về bản nháp' : 'Xuất bản bài viết'}
+                aria-label={`${post.isPublished ? 'Ẩn' : 'Xuất bản'} ${post.title}`}
+                aria-pressed={post.isPublished}
+              >
+                <span aria-hidden="true" />
+                {post.isPublished ? 'Đang đăng' : 'Bản nháp'}
+              </button>
+              <button
+                className="icon-btn"
+                onClick={(event) => edit(post, event)}
+                title="Chỉnh sửa"
+                aria-label={`Chỉnh sửa ${post.title}`}
+              >
                 <Edit size={16} />
               </button>
-              <button className="icon-btn danger" onClick={() => remove(post.id)} title="Xóa">
+              <button
+                className="icon-btn danger"
+                onClick={() => remove(post.id)}
+                title="Xóa"
+                aria-label={`Xóa ${post.title}`}
+              >
                 <Trash2 size={16} />
               </button>
             </div>

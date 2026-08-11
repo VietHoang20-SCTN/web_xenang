@@ -78,6 +78,7 @@ model Service {
 
   description String?   @db.Text
   content     String?   @db.LongText
+  image       String?   @db.VarChar(500)
 
   icon        String?
 
@@ -124,6 +125,8 @@ model Lead {
 
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([status])
 }
 
 model SiteSetting {
@@ -172,4 +175,6 @@ model AuditLog {
   ip          String?
 
   createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }

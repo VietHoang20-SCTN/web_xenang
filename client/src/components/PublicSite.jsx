@@ -28,34 +28,27 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { api, assetUrl } from '../api'
-import {
-  categories as fallbackCategories,
-  products as fallbackProducts,
-  services as fallbackServices,
-  siteSettings as fallbackSettings,
-} from '../data'
+
 import { mapEmbedUrl, serviceIcons } from '../constants'
-import { useTheme, useScrollAnimations, useScrollProgress, useParallax } from '../hooks'
+import { useTheme, useScrollAnimations, useScrollProgress } from '../hooks'
 import AlbumModal from './AlbumModal'
 import { notify } from '../toast'
+import { setPageMeta } from '../seo'
 
 export default function PublicSite() {
   const { theme, toggleTheme } = useTheme()
   const scrollProgress = useScrollProgress()
   const location = useLocation()
-  const [categories, setCategories] = useState(fallbackCategories)
-  const [products, setProducts] = useState(fallbackProducts)
-  const [serviceItems, setServiceItems] = useState(
-    fallbackServices.map((service, index) => ({
-      ...service,
-      id: service.title,
-      icon: ['Truck', 'PackageCheck', 'Settings', 'Factory'][index] || 'Settings',
-    }))
-  )
+  const [categories, setCategories] = useState([])
+  const [products, setProducts] = useState([])
+  const [serviceItems, setServiceItems] = useState([])
   const [blogPosts, setBlogPosts] = useState([])
-  const [siteSettings, setSiteSettings] = useState(fallbackSettings)
+  const [siteSettings, setSiteSettings] = useState({})
   const [activeCategory, setActiveCategory] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const menuButtonRef = useRef(null)
+  const closeButtonRef = useRef(null)
+  const wasMobileMenuOpen = useRef(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
@@ -67,69 +60,107 @@ export default function PublicSite() {
   const [lightbox, setLightbox] = useState(null) // { images, index }
 
   useEffect(() => {
-    Promise.all([
+    setPageMeta()
+  }, [])
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      if (wasMobileMenuOpen.current) menuButtonRef.current?.focus()
+      wasMobileMenuOpen.current = false
+      return
+    }
+
+    wasMobileMenuOpen.current = true
+    const dialog = closeButtonRef.current?.parentElement
+    const siblings = [...(dialog?.parentElement?.children || [])].filter((element) => element !== dialog)
+    const inertStates = siblings.map((element) => [element, element.inert])
+    siblings.forEach((element) => {
+      element.inert = true
+    })
+    closeButtonRef.current?.focus()
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const focusable = [...dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled])')]
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      inertStates.forEach(([element, inert]) => {
+        element.inert = inert
+      })
+    }
+  }, [mobileMenuOpen])
+
+  useEffect(() => {
+    Promise.allSettled([
       api('/public/categories'),
       api('/public/products'),
       api('/public/services'),
       api('/public/site-settings'),
       api('/public/blog?limit=7'),
-    ])
-      .then(([apiCategories, apiProducts, apiServices, apiSettings, apiBlog]) => {
-        setCategories(apiCategories || fallbackCategories)
-        setProducts(apiProducts || fallbackProducts)
-        setServiceItems((prev) => (apiServices?.length ? apiServices : prev))
-        setSiteSettings(apiSettings || fallbackSettings)
-        setBlogPosts(apiBlog?.items || [])
-      })
-      .catch(() => {})
+    ]).then(([categoriesResult, productsResult, servicesResult, settingsResult, blogResult]) => {
+      if (categoriesResult.status === 'fulfilled') setCategories(categoriesResult.value || [])
+      if (productsResult.status === 'fulfilled') setProducts(productsResult.value || [])
+      if (servicesResult.status === 'fulfilled') setServiceItems(servicesResult.value || [])
+      if (settingsResult.status === 'fulfilled') setSiteSettings(settingsResult.value || {})
+      if (blogResult.status === 'fulfilled') setBlogPosts(blogResult.value?.items || [])
+    })
   }, [])
 
-  // Scroll to section when navigated from another page or returning from product/service detail
   useEffect(() => {
-    const sectionId = location.state?.scrollTo || sessionStorage.getItem('xenang_section')
+    const sectionId = location.hash.slice(1) || location.state?.scrollTo
     if (!sectionId) return
-    sessionStorage.removeItem('xenang_section')
-    // Immediately highlight the target nav item
+
     setActiveSection(sectionId)
-    // Retry a few times in case DOM isn't ready yet
-    let attempts = 0
-    const tryScroll = () => {
-      const el = document.getElementById(sectionId)
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' })
-      } else if (attempts < 15) {
-        attempts++
-        setTimeout(tryScroll, 150)
-      }
-    }
-    // Small delay to let React finish rendering
-    setTimeout(tryScroll, 300)
-  }, [location.state])
+    const behavior = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior, block: 'start' })
+      })
+    })
 
-  // Track active section for nav highlighting — pick the most visible one
+    return () => cancelAnimationFrame(frame)
+  }, [location.hash, location.key, location.state, categories, products, serviceItems, blogPosts])
+
   useEffect(() => {
-    const sections = document.querySelectorAll('section[id]')
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Find the entry with the highest intersection ratio
-        let best = null
-        entries.forEach((entry) => {
-          if (!best || entry.intersectionRatio > best.intersectionRatio) {
-            best = entry
-          }
-        })
-        if (best && best.isIntersecting) {
-          setActiveSection(best.target.id)
-        }
-      },
-      { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], rootMargin: '-80px 0px 0px 0px' }
-    )
-    sections.forEach((section) => observer.observe(section))
-    return () => observer.disconnect()
-  }, [])
+    const sections = [...document.querySelectorAll('section[id]')]
+    const updateActiveSection = () => {
+      const activationLine = window.innerHeight * 0.3
+      const current = sections.reduce(
+        (active, section) => (section.getBoundingClientRect().top <= activationLine ? section : active),
+        sections[0]
+      )
+      setActiveSection(current.id)
+    }
+    const scrollRoot = document.querySelector('.snap-main')
+    window.addEventListener('scroll', updateActiveSection, { passive: true })
+    window.addEventListener('resize', updateActiveSection, { passive: true })
+    scrollRoot.addEventListener('scroll', updateActiveSection, { passive: true })
+    updateActiveSection()
+    return () => {
+      window.removeEventListener('scroll', updateActiveSection)
+      window.removeEventListener('resize', updateActiveSection)
+      scrollRoot.removeEventListener('scroll', updateActiveSection)
+    }
+  }, [blogPosts])
 
-  useScrollAnimations([products, categories, serviceItems, activeCategory, searchQuery])
-  useParallax()
+  useScrollAnimations([products, categories, serviceItems, blogPosts, activeCategory, searchQuery])
 
   // Auto-advance about image carousel every 7 seconds
   useEffect(() => {
@@ -222,7 +253,7 @@ export default function PublicSite() {
       </div>
 
       {/* Scroll progress bar */}
-      <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
+      <div ref={scrollProgress} className="scroll-progress" />
 
       <header className={`site-header ${searchOpen ? 'search-active' : ''}`}>
         <a className="brand" href="#home">
@@ -243,64 +274,28 @@ export default function PublicSite() {
           )}
         </a>
         <nav className="desktop-nav">
-          <Link
-            to="/"
-            className={activeSection === 'home' ? 'active' : ''}
-            onClick={(e) => {
-              setActiveSection('home')
-              if (location.pathname === '/') {
-                e.preventDefault()
-                document.getElementById('home')?.scrollIntoView({ behavior: 'smooth' })
-              }
-            }}
-          >
+          <Link to="/#home" className={activeSection === 'home' ? 'active' : ''}>
             Trang chủ
           </Link>
-          <a
-            href="#about"
-            className={activeSection === 'about' ? 'active' : ''}
-            onClick={(e) => {
-              e.preventDefault()
-              setActiveSection('about')
-              document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-          >
+          <Link to="/#about" className={activeSection === 'about' ? 'active' : ''}>
             Giới thiệu
-          </a>
-          <a
-            href="#products"
-            className={activeSection === 'products' ? 'active' : ''}
-            onClick={(e) => {
-              e.preventDefault()
-              setActiveSection('products')
-              document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-          >
+          </Link>
+          <Link to="/#products" className={activeSection === 'products' ? 'active' : ''}>
             Sản phẩm
-          </a>
-          <a
-            href="#services"
-            className={activeSection === 'services' ? 'active' : ''}
-            onClick={(e) => {
-              e.preventDefault()
-              setActiveSection('services')
-              document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-          >
+          </Link>
+          <Link to="/#services" className={activeSection === 'services' ? 'active' : ''}>
             Dịch vụ
-          </a>
-          <a
-            href="#contact"
-            className={activeSection === 'contact' ? 'active' : ''}
-            onClick={(e) => {
-              e.preventDefault()
-              setActiveSection('contact')
-              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-          >
+          </Link>
+          <Link to="/#contact" className={activeSection === 'contact' ? 'active' : ''}>
             Liên hệ
-          </a>
-          <Link to="/blog">Blog</Link>
+          </Link>
+          <Link
+            to="/blog"
+            className={activeSection === 'blog' ? 'active' : ''}
+            aria-current={activeSection === 'blog' ? 'location' : undefined}
+          >
+            Blog
+          </Link>
         </nav>
         <div className="header-actions">
           <div className={`header-search ${searchOpen ? 'open' : ''}`}>
@@ -329,74 +324,80 @@ export default function PublicSite() {
             <Phone size={18} />
             {siteSettings.hotline}
           </a>
-          <button className="menu-btn" onClick={() => setMobileMenuOpen(true)}>
+          <button
+            ref={menuButtonRef}
+            className="menu-btn"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Mở menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="home-mobile-menu"
+          >
             <Menu />
           </button>
         </div>
       </header>
       {mobileMenuOpen && (
-        <div className="mobile-panel">
-          <button className="close-btn" onClick={() => setMobileMenuOpen(false)}>
+        <div
+          id="home-mobile-menu"
+          className="mobile-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Điều hướng chính"
+        >
+          <button
+            ref={closeButtonRef}
+            className="close-btn"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Đóng menu"
+          >
             <X />
           </button>
           <Link
-            to="/"
-            onClick={(e) => {
-              setMobileMenuOpen(false)
-              setActiveSection('home')
-              if (location.pathname === '/') {
-                e.preventDefault()
-                document.getElementById('home')?.scrollIntoView({ behavior: 'smooth' })
-              }
-            }}
+            to="/#home"
+            className={activeSection === 'home' ? 'active' : ''}
+            aria-current={activeSection === 'home' ? 'location' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Trang chủ
           </Link>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMobileMenuOpen(false)
-              setActiveSection('about')
-              document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-            href="#about"
+          <Link
+            to="/#about"
+            className={activeSection === 'about' ? 'active' : ''}
+            aria-current={activeSection === 'about' ? 'location' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Giới thiệu
-          </a>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMobileMenuOpen(false)
-              setActiveSection('products')
-              document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-            href="#products"
+          </Link>
+          <Link
+            to="/#products"
+            className={activeSection === 'products' ? 'active' : ''}
+            aria-current={activeSection === 'products' ? 'location' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Sản phẩm
-          </a>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMobileMenuOpen(false)
-              setActiveSection('services')
-              document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-            href="#services"
+          </Link>
+          <Link
+            to="/#services"
+            className={activeSection === 'services' ? 'active' : ''}
+            aria-current={activeSection === 'services' ? 'location' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Dịch vụ
-          </a>
-          <a
-            onClick={(e) => {
-              e.preventDefault()
-              setMobileMenuOpen(false)
-              setActiveSection('contact')
-              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
-            }}
-            href="#contact"
+          </Link>
+          <Link
+            to="/#contact"
+            className={activeSection === 'contact' ? 'active' : ''}
+            aria-current={activeSection === 'contact' ? 'location' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Liên hệ
-          </a>
-          <Link to="/blog" onClick={() => setMobileMenuOpen(false)}>
+          </Link>
+          <Link
+            to="/blog"
+            className={activeSection === 'blog' ? 'active' : ''}
+            aria-current={activeSection === 'blog' ? 'location' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
+          >
             Blog
           </Link>
         </div>
@@ -536,9 +537,11 @@ export default function PublicSite() {
                     const isVisible = Math.abs(offset) <= 2
                     if (!isVisible) return null
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={i}
                         className={`about-coverflow-item${isCenter ? ' active' : ''}`}
+                        aria-label={isCenter ? `Mở ảnh giới thiệu ${i + 1}` : `Chọn ảnh giới thiệu ${i + 1}`}
                         style={{
                           transform: `perspective(1000px) translateX(${offset * 150}px) translateZ(${isCenter ? 60 : -20}px) rotateY(${offset * -8}deg) scale(${isCenter ? 1 : 0.85})`,
                           zIndex: 10 - Math.abs(offset),
@@ -549,15 +552,17 @@ export default function PublicSite() {
                           else setAboutCarouselIndex(i)
                         }}
                       >
-                        <img src={assetUrl(img)} alt={`Giới thiệu ${i + 1}`} />
-                      </div>
+                        <img src={assetUrl(img)} alt="" />
+                      </button>
                     )
                   })}
                 </div>
                 {siteSettings.aboutImages.length > 1 && (
                   <>
                     <button
+                      type="button"
                       className="about-coverflow-btn about-coverflow-prev"
+                      aria-label="Ảnh giới thiệu trước"
                       onClick={() =>
                         setAboutCarouselIndex((i) => (i === 0 ? siteSettings.aboutImages.length - 1 : i - 1))
                       }
@@ -565,14 +570,16 @@ export default function PublicSite() {
                       <ChevronLeft size={20} />
                     </button>
                     <button
+                      type="button"
                       className="about-coverflow-btn about-coverflow-next"
+                      aria-label="Ảnh giới thiệu tiếp theo"
                       onClick={() =>
                         setAboutCarouselIndex((i) => (i === siteSettings.aboutImages.length - 1 ? 0 : i + 1))
                       }
                     >
                       <ChevronRight size={20} />
                     </button>
-                    <div className="about-coverflow-counter">
+                    <div className="about-coverflow-counter" aria-live="polite">
                       {aboutCarouselIndex + 1} / {siteSettings.aboutImages.length}
                     </div>
                   </>
@@ -706,10 +713,7 @@ export default function PublicSite() {
                 )}
 
                 <div className="product-body">
-                  <Link
-                    to={`/san-pham/${product.slug || product.id}`}
-                    onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
-                  >
+                  <Link to={`/san-pham/${product.slug || product.id}`}>
                     <h3>{product.name}</h3>
                   </Link>
                   <p className="product-desc">{product.summary}</p>
@@ -738,11 +742,7 @@ export default function PublicSite() {
                   </div>
 
                   <div className="product-actions">
-                    <Link
-                      to={`/san-pham/${product.slug || product.id}`}
-                      className="detail-link"
-                      onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
-                    >
+                    <Link to={`/san-pham/${product.slug || product.id}`} className="detail-link">
                       Xem chi tiết
                     </Link>
                     <button
@@ -769,12 +769,13 @@ export default function PublicSite() {
         </section>
 
         {/* Services */}
-        <section id="services" className="section alt-section reveal-clip">
+        <section id="services" className="section alt-section journey-section journey-services reveal-clip">
           <div className="section-heading reveal-blur">
             <span>Dịch vụ</span>
             <h2>Bán, cho thuê, sửa chữa và phụ tùng</h2>
+            <p>Giải pháp trọn vòng đời thiết bị, từ lựa chọn xe đến bảo trì vận hành.</p>
           </div>
-          <div className="service-grid">
+          <div className="service-catalog">
             {serviceItems.map((service, index) => {
               const Icon = serviceIcons[service.icon] || Settings
               const serviceSlug =
@@ -787,13 +788,19 @@ export default function PublicSite() {
               return (
                 <Link
                   to={`/dich-vu/${serviceSlug}`}
-                  className={`service-card reveal-left stagger-${(index % 8) + 1}`}
-                  onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
+                  className={`service-catalog-card reveal-left stagger-${(index % 8) + 1}`}
                   key={service.id || service.title}
                 >
-                  <Icon />
-                  <h3>{service.title}</h3>
-                  <p>{service.description}</p>
+                  <div className="service-catalog-media">
+                    {service.image ? <img src={assetUrl(service.image)} alt={service.title} loading="lazy" /> : <Icon aria-hidden="true" />}
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                  </div>
+                  <div className="service-catalog-copy">
+                    <i><Icon aria-hidden="true" /></i>
+                    <h3>{service.title}</h3>
+                    <p>{service.description}</p>
+                    <strong>Xem chi tiết <ChevronRight size={16} /></strong>
+                  </div>
                 </Link>
               )
             })}
@@ -801,9 +808,10 @@ export default function PublicSite() {
         </section>
 
         {/* Contact */}
-        <section id="contact" className="section contact-section reveal-clip">
+        <section id="contact" className="section contact-section journey-section journey-contact reveal-clip">
           {/* Map */}
           <div className="contact-map-wrap reveal-scale">
+            <div className="contact-map-label"><span>Vị trí hoạt động</span><strong>Bắc Ninh · Miền Bắc</strong></div>
             {mapEmbedUrl(siteSettings.mapEmbed, siteSettings.address) ? (
               <iframe
                 title="Bản đồ"
@@ -822,8 +830,9 @@ export default function PublicSite() {
           {/* Info */}
           <div className="contact-body">
             <div className="contact-heading reveal-blur">
-              <span className="contact-eyebrow">Liên hệ</span>
-              <h2>{siteSettings.brand}</h2>
+              <div className="contact-heading-meta"><span className="contact-eyebrow">Trạm liên hệ</span><span className="contact-section-index">05 / 06</span></div>
+              <h2>{siteSettings.brand || 'Thông tin liên hệ'}</h2>
+              <p className="contact-intro">Kết nối trực tiếp với đội ngũ tư vấn để nhận phương án thiết bị phù hợp cho vận hành của bạn.</p>
             </div>
 
             <div className="contact-cards-row">
@@ -849,6 +858,12 @@ export default function PublicSite() {
                 <a href={`mailto:${siteSettings.email}`}>{siteSettings.email || 'contact@xenang.vn'}</a>
               </div>
             </div>
+
+            {siteSettings.hotline && <a className="contact-direct-call" href={`tel:${siteSettings.hotline}`}>
+              <span>Trao đổi trực tiếp</span>
+              <strong>{siteSettings.hotline}</strong>
+              <ArrowRight size={20} />
+            </a>}
           </div>
         </section>
 
@@ -863,11 +878,7 @@ export default function PublicSite() {
             <div className="homepage-blog">
               {/* Featured first post */}
               <article className="blog-featured reveal-scale stagger-1">
-                <Link
-                  to={`/blog/${blogPosts[0].slug}`}
-                  className="blog-featured-image"
-                  onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
-                >
+                <Link to={`/blog/${blogPosts[0].slug}`} className="blog-featured-image">
                   {blogPosts[0].coverImage ? (
                     <img src={assetUrl(blogPosts[0].coverImage)} alt={blogPosts[0].title} loading="eager" />
                   ) : (
@@ -893,10 +904,7 @@ export default function PublicSite() {
                       <Clock size={14} /> 5 phút đọc
                     </span>
                   </div>
-                  <Link
-                    to={`/blog/${blogPosts[0].slug}`}
-                    onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
-                  >
+                  <Link to={`/blog/${blogPosts[0].slug}`}>
                     <h3>{blogPosts[0].title}</h3>
                   </Link>
                   {blogPosts[0].excerpt && <p>{blogPosts[0].excerpt}</p>}
@@ -909,11 +917,7 @@ export default function PublicSite() {
                       ))}
                     </div>
                   )}
-                  <Link
-                    to={`/blog/${blogPosts[0].slug}`}
-                    className="blog-read-more"
-                    onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
-                  >
+                  <Link to={`/blog/${blogPosts[0].slug}`} className="blog-read-more">
                     Đọc bài viết <ArrowRight size={16} />
                   </Link>
                 </div>
@@ -924,11 +928,7 @@ export default function PublicSite() {
                 <div className="blog-mini-grid">
                   {blogPosts.slice(1).map((post, i) => (
                     <article key={post.id} className={`blog-mini-card reveal-scale stagger-${i + 2}`}>
-                      <Link
-                        to={`/blog/${post.slug}`}
-                        className="blog-mini-image"
-                        onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
-                      >
+                      <Link to={`/blog/${post.slug}`} className="blog-mini-image">
                         {post.coverImage ? (
                           <img src={assetUrl(post.coverImage)} alt={post.title} loading="lazy" />
                         ) : (
@@ -942,10 +942,7 @@ export default function PublicSite() {
                           <Calendar size={12} />{' '}
                           {new Date(post.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}
                         </span>
-                        <Link
-                          to={`/blog/${post.slug}`}
-                          onClick={() => sessionStorage.setItem('xenang_section', activeSection)}
-                        >
+                        <Link to={`/blog/${post.slug}`}>
                           <h4>{post.title}</h4>
                         </Link>
                         {post.excerpt && <p>{post.excerpt}</p>}
@@ -962,6 +959,9 @@ export default function PublicSite() {
             </div>
           </section>
         )}
+        <footer role="contentinfo">
+          © 2026 {siteSettings.brand}. Website bán & cho thuê xe nâng cho doanh nghiệp kho vận.
+        </footer>
       </main>
 
       {/* Album Modal */}
@@ -1020,7 +1020,6 @@ export default function PublicSite() {
           <span>Zalo</span>
         </a>
       </div>
-      <footer>© 2026 {siteSettings.brand}. Website bán & cho thuê xe nâng cho doanh nghiệp kho vận.</footer>
     </>
   )
 }

@@ -1,159 +1,105 @@
-# Website xe nâng Bắc Ninh
+# Website Xe Nâng Bắc Ninh
 
-Ứng dụng web giới thiệu, bán và cho thuê xe nâng theo yêu cầu khách hàng trong `yeucaukhachhang.pdf`, có backend API, PostgreSQL và admin CMS.
+Website bán/cho thuê xe nâng gồm React/Vite public site, Express API, MySQL/MariaDB, Prisma và Admin CMS.
 
-## Tính năng hiện có
+## Chức năng
 
-- Website public lấy dữ liệu sản phẩm/danh mục/cấu hình từ API.
-- Form yêu cầu tư vấn/báo giá/thuê xe lưu lead vào PostgreSQL.
-- Backend Express với public API, auth API và admin CRUD API.
-- Prisma schema cho PostgreSQL.
-- Admin đăng nhập thật bằng JWT.
-- Admin CRUD sản phẩm, danh mục, lead và cấu hình liên hệ.
-- Admin hỗ trợ sửa sản phẩm, sửa danh mục và CRUD dịch vụ.
-- Upload ảnh sản phẩm từ thiết bị, tự động resize/nén sang WebP bằng `sharp`.
-- Sản phẩm có ảnh đại diện và gallery ảnh chi tiết.
-- Nhập thông số kỹ thuật sản phẩm bằng từng dòng có nút thêm/xóa.
-- Quản lý lead bằng tìm kiếm, lọc trạng thái, Kanban pipeline và modal chi tiết.
-- UI public dùng Montserrat/Inter, màu vàng `#FFC107`, đen/xám đậm `#1F2937`, Card UI mobile-first.
-- Dữ liệu fallback vẫn nằm trong `src/data.js` để giao diện public không trắng khi API chưa chạy.
+- Public: danh mục, sản phẩm, dịch vụ, blog, trang chi tiết, form lead.
+- Admin: đăng nhập HttpOnly cookie; CRUD sản phẩm, danh mục, dịch vụ, blog, lead, cấu hình; audit log.
+- Media: Cloudinary; resize/nén WebP; kiểm tra magic bytes; tối đa 10 MB.
+- Bảo vệ: Helmet, CORS allowlist, Zod validation, rate limit login/lead, rich-text allowlist sanitizer.
 
-## Chuẩn bị môi trường
-
-Tạo file `.env` từ `.env.example`:
-
-```bash
-copy .env.example .env
-```
-
-Cập nhật `DATABASE_URL` theo PostgreSQL của bạn, ví dụ:
+## Cấu trúc
 
 ```text
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/xenang?schema=public"
-JWT_SECRET="change-this-secret-before-production"
-PORT=4000
-VITE_API_URL="http://localhost:4000/api"
-ADMIN_EMAIL="admin@xenang.local"
-ADMIN_PASSWORD="Admin@123456"
+client/src/main.jsx                 React routes
+client/src/components/              Public site và Admin CMS
+client/src/api.js                   API client dùng cookie
+server/index.js                     Express server
+server/routes/{public,auth,admin}.js API
+server/routes/upload.js             Upload Cloudinary
+server/prisma/schema.prisma         MySQL/MariaDB schema
+server/prisma/migrations/            Migration nguồn chuẩn
+server/prisma/seed.js               Seed dữ liệu mẫu
 ```
 
-## Cài đặt database
+## Local
 
-Sau khi MySQL/MariaDB đã có database `xenang`, chạy:
+Yêu cầu Node.js 20+ và MySQL/MariaDB.
 
-```bash
+```powershell
+Copy-Item .env.example server/.env
 npm install
-npm run prisma:generate
-npm run prisma:migrate
-npm run prisma:seed
-```
-
-Tài khoản admin mặc định lấy từ `.env`:
-
-```text
-admin@xenang.local / Admin@123456
-```
-
-## Chạy dự án
-
-Chạy frontend và backend cùng lúc:
-
-```bash
+npm install --prefix client
+npm install --prefix server
+npm run prisma:generate --prefix server
+npm run prisma:migrate --prefix server
+npm run prisma:seed --prefix server
 npm run dev
 ```
 
 - Website: `http://localhost:5173`
 - Admin: `http://localhost:5173/admin`
 - API: `http://localhost:4000/api`
+- Health + DB: `http://localhost:4000/api/health`
 
-## Build production
-
-```bash
-npm run build
-npm run preview
-```
-
-## Cấu trúc chính
+## API
 
 ```text
-server/index.js              Express API server
-server/routes/public.js      Public API cho website
-server/routes/auth.js        Đăng nhập admin
-server/routes/admin.js       Admin CRUD API
-server/middleware/auth.js    Middleware JWT
-prisma/schema.prisma         Database schema MySQL
-prisma/seed.js               Seed dữ liệu mẫu và admin
-src/api.js                   API client frontend
-src/main.jsx                 Website public và admin UI
-src/data.js                  Dữ liệu fallback
+GET  /api/public/site-settings
+GET  /api/public/categories
+GET  /api/public/products
+GET  /api/public/products/:slug
+GET  /api/public/services
+GET  /api/public/services/:slug
+GET  /api/public/blog
+GET  /api/public/blog/:slug
+POST /api/public/leads
+
+POST /api/auth/login
+POST /api/auth/logout
+GET  /api/auth/me
+
+GET/POST/PUT/DELETE /api/admin/categories
+GET/POST/PUT/DELETE /api/admin/products
+GET/POST/PUT/DELETE /api/admin/services
+GET/POST/PUT/DELETE /api/admin/blog
+GET/PUT/DELETE      /api/admin/leads
+GET/PUT             /api/admin/site-settings
+GET                 /api/admin/audit-log
+
+POST /api/upload/product-image
+POST /api/upload/logo
+POST /api/upload/about-image
 ```
 
-## API chính
+## Kiểm tra
 
-- `GET /api/public/site-settings`
-- `GET /api/public/categories`
-- `GET /api/public/products`
-- `GET /api/public/services`
-- `POST /api/public/leads`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `GET/POST/PUT/DELETE /api/admin/categories`
-- `GET/POST/PUT/DELETE /api/admin/products`
-- `GET/POST/PUT/DELETE /api/admin/services`
-- `GET/PUT/DELETE /api/admin/leads`
-- `GET/PUT /api/admin/site-settings`
-- `POST /api/upload/product-image`
-
-## 🚀 Deploy Free (Neon + Render)
-
-### 1. Tạo PostgreSQL miễn phí trên Neon
-
-1. Vào [neon.tech](https://neon.tech) → Sign Up bằng GitHub
-2. Tạo project `xenang` → Copy **Connection string**
-3. Chạy migrate + seed với DB mới:
-
-```bash
-$env:DATABASE_URL="postgresql://...neon.tech/xenang?sslmode=require"
-npm run prisma:migrate
-npm run prisma:seed
+```powershell
+npm test --prefix server
+npm run prisma:generate --prefix server
+npx prisma validate --schema server/prisma/schema.prisma
+npm run build --prefix client
 ```
 
-### 2. Deploy lên Render
+## Production
 
-1. Vào [render.com](https://render.com) → Sign Up bằng GitHub
-2. **New +** → **Web Service** → Connect repo `VietHoang20-SCTN/web_xenang`
-3. Cấu hình:
+1. Tạo MySQL/MariaDB production và backup tự động.
+2. Tạo `server/.env` từ `.env.example`; dùng `JWT_SECRET` ngẫu nhiên >= 32 ký tự.
+3. Đặt `NODE_ENV=production`, domain thật trong `CORS_ORIGINS`, credential Cloudinary thật.
+4. Build: `npm install && npm run prisma:generate --prefix server && npm run prisma:deploy --prefix server && npm run build --prefix client`.
+5. Start: `npm run start --prefix server`.
+6. Kiểm tra `/api/health`, login/logout, CRUD staging, upload, form lead và mobile.
 
-| Field | Value |
-|---|---|
-| Build Command | `npm install && npm run prisma:generate && npm run prisma:deploy && npm run build` |
-| Start Command | `node server/index.js` |
-| Instance Type | **Free** |
+> Không commit `.env`. Server đọc cấu hình từ `server/.env` khi chạy bằng các script hiện tại. Không dùng mật khẩu seed mẫu. Prisma migrations là nguồn schema chuẩn; `server/full_schema.sql` chỉ là bản dump tham khảo.
+>
+> Nếu `.env` từng xuất hiện trong Git hoặc được chia sẻ công khai: đổi ngay DB password, JWT secret và Cloudinary API secret; xóa file khỏi Git history sau khi đã rotate credentials.
 
-4. Thêm **Environment Variables** (quan trọng: `NPM_CONFIG_PRODUCTION=false` để cài devDependencies):
+## Checklist nội dung trước public
 
-```
-NPM_CONFIG_PRODUCTION=false
-NODE_ENV=production
-DATABASE_URL=postgresql://... (Neon connection string)
-JWT_SECRET=5e8fecfc8718327fbe024e9029c7ef7c249d2da31abbda88908c822981db4561
-CORS_ORIGINS=https://xenang.onrender.com
-PORT=4000
-VITE_API_URL=https://xenang.onrender.com/api
-ADMIN_EMAIL=admin@xenang.local
-ADMIN_PASSWORD=Admin@123456
-```
-
-5. Click **Create Web Service** → Đợi build ~5 phút
-
-### 3. Sau khi deploy
-
-- 🌐 Website: `https://xenang.onrender.com`
-- 🔧 Admin: `https://xenang.onrender.com/admin`
-- 💡 Dùng [UptimeRobot](https://uptimerobot.com) ping web mỗi 5 phút để tránh Render sleep
-
-## Ghi chú production
-
-- Đổi `JWT_SECRET` và `ADMIN_PASSWORD` trước khi public chính thức.
-- Ảnh upload lưu tại `server/uploads/`, Render free disk sẽ reset khi redeploy → nên dùng Cloudinary hoặc S3 cho production thật.
-- Nếu dùng domain riêng, cập nhật `CORS_ORIGINS` và `VITE_API_URL` tương ứng.
+- [ ] Thay hotline, email, địa chỉ, Zalo và logo thật.
+- [ ] Thay ảnh/nội dung demo.
+- [ ] Xác nhận domain, canonical, Open Graph image và `robots.txt`.
+- [ ] Test Cloudinary, CORS và cookie trên domain thật.
+- [ ] Test backup/restore database.
+- [ ] Test keyboard và điện thoại thật.

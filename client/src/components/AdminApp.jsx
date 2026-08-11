@@ -92,6 +92,9 @@ export default function AdminApp() {
 
   if (!user) return (
     <main className="admin-login">
+      <button className="admin-theme-toggle" type="button" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}>
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
       <div className="login-container">
         <div className="login-brand-panel">
           <div className="login-brand-content">
@@ -154,9 +157,9 @@ export default function AdminApp() {
           <a className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}><Settings size={18} /> Cấu hình</a>
         </nav>
         <div className="sidebar-footer">
-          <button className="theme-toggle-sidebar" onClick={toggleTheme}>
+          <button className="admin-theme-button" type="button" onClick={toggleTheme}>
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            {theme === 'dark' ? 'Sáng' : 'Tối'}
+            {theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
           </button>
           <button className="logout-btn" onClick={doLogout}><LogOut size={16} /> Đăng xuất</button>
         </div>

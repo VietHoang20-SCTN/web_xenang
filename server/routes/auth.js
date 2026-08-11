@@ -17,6 +17,12 @@ const COOKIE_OPTIONS = {
   path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
 }
+const CLEAR_COOKIE_OPTIONS = {
+  httpOnly: COOKIE_OPTIONS.httpOnly,
+  secure: COOKIE_OPTIONS.secure,
+  sameSite: COOKIE_OPTIONS.sameSite,
+  path: COOKIE_OPTIONS.path,
+}
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -43,9 +49,9 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next
 
     // Audit
     const ip = req.ip || req.headers['x-forwarded-for'] || ''
-    auditLog({ userId: user.id, userEmail: user.email, action: 'LOGIN', entity: 'AdminUser', entityId: user.id, ip })
+    await auditLog({ userId: user.id, userEmail: user.email, action: 'LOGIN', entity: 'AdminUser', entityId: user.id, ip })
 
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } })
+    res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role } })
   } catch (error) {
     next(error)
   }
@@ -54,11 +60,11 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next
 router.post('/logout', requireAuth, async (req, res, next) => {
   try {
     // Clear cookie
-    res.clearCookie(TOKEN_COOKIE, { path: '/' })
+    res.clearCookie(TOKEN_COOKIE, CLEAR_COOKIE_OPTIONS)
 
     // Audit
     const ip = req.ip || req.headers['x-forwarded-for'] || ''
-    auditLog({ userId: req.user.id, userEmail: req.user.email, action: 'LOGOUT', entity: 'AdminUser', entityId: req.user.id, ip })
+    await auditLog({ userId: req.user.id, userEmail: req.user.email, action: 'LOGOUT', entity: 'AdminUser', entityId: req.user.id, ip })
 
     res.json({ message: 'Đã đăng xuất.' })
   } catch (error) {
